@@ -25,12 +25,28 @@ npm test
 | `PORT`           | `3000`                    | HTTP-Port                                                                |
 | `DATA_FILE`      | `data/registrations.json` | Hier werden die Anmeldungen gespeichert                                  |
 
-### Docker
+### Deployment (Selfhosting mit Docker Compose)
+
+Bei jedem Push auf `main` baut GitHub Actions das Image `ghcr.io/im-a-train/kapf:latest`.
+
+Auf dem Server:
 
 ```bash
-docker build -t kapf .
-docker run -p 3000:3000 -e ADMIN_PASSWORD=… -e SECRET=… -v kapf-data:/data kapf
+mkdir kapf && cd kapf
+curl -O https://raw.githubusercontent.com/Im-a-Train/kapf/main/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/Im-a-Train/kapf/main/.env.example
+nano .env                      # ADMIN_PASSWORD und SECRET setzen
+docker compose up -d           # läuft auf Port 3000
 ```
+
+Update: `docker compose pull && docker compose up -d`. Die Anmeldungen liegen im Volume `kapf-data`.
+
+Hinweise:
+- Ist das Repo privat, ist auch das Image privat: entweder auf dem Server `docker login ghcr.io`
+  (Token mit `read:packages`) oder das Package auf GitHub öffentlich stellen. Alternativ Repo klonen
+  und in `docker-compose.yml` `build: .` statt `image:` verwenden.
+- Für HTTPS einen Reverse Proxy (Caddy, Traefik, nginx) vor Port 3000 stellen. Er sollte
+  `X-Forwarded-Proto` setzen, damit das Admin-Cookie als `Secure` markiert wird.
 
 ## Aufbau
 

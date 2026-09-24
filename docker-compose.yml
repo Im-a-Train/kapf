@@ -1,0 +1,14 @@
+services:
+  kapf:
+    image: ghcr.io/im-a-train/kapf:latest
+    # Alternativ direkt aus dem Repo bauen:
+    # build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file: .env
+    volumes:
+      - kapf-data:/data
+
+volumes:
+  kapf-data:
