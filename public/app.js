@@ -66,7 +66,8 @@ $('#riddle-form').addEventListener('submit', async (e) => {
     store.set('riddleToken', data.token);
     fb.className = 'feedback yes';
     fb.textContent = 'RICHTIG! Du darfst dich anmelden. 🥳';
-    confetti();
+    confetti(200);
+    confetti(80, { x: innerWidth / 2, y: innerHeight / 2 });
     setTimeout(unlockSignup, 900);
   } else {
     fails++;
@@ -74,6 +75,8 @@ $('#riddle-form').addEventListener('submit', async (e) => {
     void fb.offsetWidth; // Animation neu starten
     fb.className = 'feedback nope';
     fb.textContent = NOPE[(fails - 1) % NOPE.length];
+    const r = fb.getBoundingClientRect();
+    confetti(15, { x: r.left + 40, y: r.top, bits: ['💩', '🙈', '❌', '🤡'] });
     if (fails >= 2 && riddle.hint) $('#riddle-hint-btn').hidden = false;
   }
 });
@@ -136,7 +139,8 @@ form.addEventListener('submit', async (e) => {
       ? `${data.name}, du bist dabei! Wir sehen uns am ${event.dateLabel} im ${event.location}.`
       : `Schade, ${data.name}. Wir trinken eins auf dich.`;
     $('#done').scrollIntoView({ behavior: 'smooth' });
-    confetti();
+    confetti(300);
+    [0.2, 0.5, 0.8].forEach((fx, i) => setTimeout(() => confetti(60, { x: innerWidth * fx, y: innerHeight * 0.6 }), i * 400));
     return;
   }
   if (data.code === 'RIDDLE') {
@@ -153,19 +157,65 @@ form.addEventListener('submit', async (e) => {
 });
 
 // ---------- Konfetti ----------
-function confetti() {
-  const bits = ['🎉', '🎂', '🍺', '🥳', '30', '🎈', '🍾', '✨'];
-  for (let i = 0; i < 40; i++) {
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const EMOJI = ['🎉', '🎂', '🍺', '🥳', '30', '🎈', '🍾', '✨', '🥨', '🎊'];
+const COLORS = ['#ff22ff', '#ffff00', '#00ff66', '#0000ff', '#ff3300', '#00e5ff', '#000'];
+const MAX_PIECES = 400;
+let live = 0;
+
+// n Stück, entweder als Regen von oben oder als Explosion ab (x, y)
+function confetti(n = 80, { x, y, bits = EMOJI } = {}) {
+  if (reduced) return;
+  const burst = x !== undefined;
+  for (let i = 0; i < n && live < MAX_PIECES; i++) {
     const s = document.createElement('span');
     s.className = 'confetti';
-    s.textContent = bits[i % bits.length];
-    s.style.left = `${Math.random() * 100}vw`;
-    s.style.animationDuration = `${1.5 + Math.random() * 2}s`;
-    s.style.animationDelay = `${Math.random() * 0.5}s`;
+    if (Math.random() < 0.55 && bits === EMOJI) {
+      // farbiger Papierschnipsel
+      s.classList.add('paper');
+      s.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
+      s.style.width = `${6 + Math.random() * 8}px`;
+      s.style.height = `${8 + Math.random() * 12}px`;
+      if (Math.random() < 0.3) s.style.borderRadius = '50%';
+    } else {
+      s.textContent = bits[Math.floor(Math.random() * bits.length)];
+      s.style.fontSize = `${18 + Math.random() * 22}px`;
+    }
+    const startX = burst ? x : Math.random() * innerWidth;
+    const startY = burst ? y : -40;
+    s.style.left = `${startX}px`;
+    s.style.top = `${startY}px`;
     document.body.append(s);
-    s.addEventListener('animationend', () => s.remove());
+    live++;
+
+    const dx = (Math.random() - 0.5) * (burst ? 500 : 200);
+    const up = burst ? 120 + Math.random() * 260 : 0;
+    const fall = innerHeight - startY + 80;
+    const rot = (Math.random() - 0.5) * 1440;
+    const anim = s.animate([
+      { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${dx * 0.6}px, ${-up}px) rotate(${rot * 0.3}deg)`, opacity: 1, offset: burst ? 0.25 : 0.5 },
+      { transform: `translate(${dx}px, ${fall}px) rotate(${rot}deg)`, opacity: 0.8 },
+    ], {
+      duration: 1800 + Math.random() * 2200,
+      delay: burst ? 0 : Math.random() * 1200,
+      easing: 'cubic-bezier(.2,.6,.4,1)',
+      fill: 'backwards',
+    });
+    anim.onfinish = () => { s.remove(); live--; };
   }
 }
+
+// Konfetti überall: beim Laden, bei jedem Knopfdruck und als Dauer-Niesel
+addEventListener('load', () => confetti(120));
+setInterval(() => document.visibilityState === 'visible' && confetti(10), 3000);
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button, .radio, a');
+  if (!b) return;
+  const r = b.getBoundingClientRect();
+  const fromKeyboard = e.clientX === 0 && e.clientY === 0;
+  confetti(25, fromKeyboard ? { x: r.left + r.width / 2, y: r.top } : { x: e.clientX, y: e.clientY });
+});
 
 // ---------- Start ----------
 if (store.get('riddleToken')) unlockSignup();
@@ -190,7 +240,6 @@ function splitTitle() {
 splitTitle();
 
 // Glitzer hinter dem Mauszeiger
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let lastSparkle = 0;
 if (!reduced) {
   addEventListener('pointermove', (e) => {
@@ -204,4 +253,60 @@ if (!reduced) {
     document.body.append(s);
     s.addEventListener('animationend', () => s.remove());
   });
+}
+
+// ---------- Handy bewegen = UI bewegt sich mit ----------
+// Neigen: Seite kippt leicht, Karten & Hintergrund verschieben sich (Parallax).
+// Schütteln: Konfetti-Explosion. Auf dem Desktop macht die Maus dasselbe (etwas sanfter).
+const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
+const clamp = (v) => Math.max(-1, Math.min(1, v));
+
+if (!reduced) {
+  addEventListener('deviceorientation', (e) => {
+    if (e.gamma == null) return;
+    tilt.tx = clamp(e.gamma / 35);
+    tilt.ty = clamp((e.beta - 45) / 35); // normale Haltung ≈ 45°
+  });
+  addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    tilt.tx = clamp((e.clientX / innerWidth - 0.5) * 1.2);
+    tilt.ty = clamp((e.clientY / innerHeight - 0.5) * 1.2);
+  });
+
+  const root = document.documentElement;
+  (function loop() {
+    tilt.x += (tilt.tx - tilt.x) * 0.12;
+    tilt.y += (tilt.ty - tilt.y) * 0.12;
+    root.style.setProperty('--tx', tilt.x.toFixed(3));
+    root.style.setProperty('--ty', tilt.y.toFixed(3));
+    requestAnimationFrame(loop);
+  })();
+
+  let lastShake = 0;
+  let last = null;
+  addEventListener('devicemotion', (e) => {
+    const a = e.accelerationIncludingGravity;
+    if (!a || a.x == null) return;
+    if (last) {
+      const delta = Math.abs(a.x - last.x) + Math.abs(a.y - last.y) + Math.abs(a.z - last.z);
+      if (delta > 30 && e.timeStamp - lastShake > 1200) {
+        lastShake = e.timeStamp;
+        confetti(150);
+        confetti(60, { x: innerWidth / 2, y: innerHeight / 2 });
+        document.body.classList.remove('shaken');
+        void document.body.offsetWidth;
+        document.body.classList.add('shaken');
+        navigator.vibrate?.(80);
+      }
+    }
+    last = { x: a.x, y: a.y, z: a.z };
+  });
+
+  // iOS will eine Erlaubnis, und zwar nach einem Tap
+  const askMotion = () => {
+    for (const E of [globalThis.DeviceOrientationEvent, globalThis.DeviceMotionEvent]) {
+      if (typeof E?.requestPermission === 'function') E.requestPermission().catch(() => {});
+    }
+  };
+  addEventListener('touchend', askMotion, { once: true });
 }
