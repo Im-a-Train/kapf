@@ -209,3 +209,149 @@ footer { text-align: center; padding: 40px 16px; font-size: 13px; font-family: "
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* =====================================================================
+   Runde 2 (Feedback der Crew): mehr Schriften, mehr Bewegung
+   ===================================================================== */
+
+/* Hintergrund: wandernde Streifen */
+body {
+  background:
+    repeating-linear-gradient(45deg, transparent 0 40px, rgba(255, 34, 255, 0.07) 40px 80px),
+    var(--yellow);
+  background-size: 113px 113px, auto;
+  animation: stripes 4s linear infinite;
+}
+@keyframes stripes { to { background-position: 113px 0, 0 0; } }
+
+/* Schwebende Emojis im Hintergrund */
+.floaters span {
+  position: fixed;
+  bottom: -60px;
+  font-size: 36px;
+  font-family: "Monoton", cursive;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+  animation: rise 14s linear infinite;
+}
+.floaters span:nth-child(1) { left: 4%;  animation-delay: 0s; }
+.floaters span:nth-child(2) { left: 16%; animation-delay: -3s; animation-duration: 17s; }
+.floaters span:nth-child(3) { left: 30%; animation-delay: -7s; }
+.floaters span:nth-child(4) { left: 46%; animation-delay: -1s; animation-duration: 19s; }
+.floaters span:nth-child(5) { left: 62%; animation-delay: -9s; }
+.floaters span:nth-child(6) { left: 75%; animation-delay: -5s; animation-duration: 16s; }
+.floaters span:nth-child(7) { left: 87%; animation-delay: -11s; }
+.floaters span:nth-child(8) { left: 95%; animation-delay: -2s; animation-duration: 21s; }
+@keyframes rise {
+  0%   { transform: translate(0, 0) rotate(0); }
+  25%  { transform: translate(30px, -30vh) rotate(90deg); }
+  50%  { transform: translate(-30px, -60vh) rotate(180deg); }
+  100% { transform: translate(0, -120vh) rotate(360deg); }
+}
+header, main, footer, .marquee { position: relative; z-index: 1; }
+
+/* Laufschrift */
+.marquee { font-family: "Press Start 2P", monospace; font-size: 12px; padding: 10px 0; animation: marqueebg 2s steps(2) infinite; }
+@keyframes marqueebg { 50% { background: var(--pink); color: var(--black); } }
+
+/* ASCII-Art zittert und wechselt die Farbe */
+.ascii { animation: hue 3s linear infinite, jitter 0.3s steps(2) infinite; }
+@keyframes hue { to { filter: hue-rotate(360deg); } }
+@keyframes jitter { 50% { transform: translate(1px, -1px); } }
+
+/* Titel: jeder Buchstabe hüpft einzeln (Spans via app.js) */
+h1 {
+  font-family: "Bungee Shade", "Times New Roman", serif;
+  letter-spacing: 0;
+  animation: sway 3s ease-in-out infinite;
+}
+@keyframes sway { 50% { transform: rotate(2deg) scale(1.04); } }
+h1 .ch { display: inline-block; animation: hop 1.2s ease-in-out infinite; }
+h1 .ch:nth-child(4n+1) { font-family: "Rye", serif; }
+h1 .ch:nth-child(4n+3) { font-family: "Creepster", cursive; color: var(--yellow); -webkit-text-stroke: 2px var(--black); }
+@keyframes hop { 50% { transform: translateY(-12px) rotate(-6deg); } }
+
+.subtitle {
+  font-family: "Pacifico", cursive;
+  font-weight: normal;
+  font-size: 26px;
+  animation: rainbow 4s linear infinite, breathe 2.5s ease-in-out infinite;
+}
+@keyframes rainbow {
+  0%, 100% { color: #000; } 25% { color: #d000d0; } 50% { color: #0000ff; } 75% { color: #c00000; }
+}
+@keyframes breathe { 50% { transform: scale(1.06); } }
+
+/* Faktenkarten schweben, jede mit eigener Schrift */
+.fact { --r: 0deg; animation: bob 3s ease-in-out infinite; }
+.tilt-l { --r: -1.5deg; }
+.tilt-r { --r: 1.2deg; }
+.fact:nth-child(2) { animation-delay: -0.7s; }
+.fact:nth-child(3) { animation-delay: -1.4s; }
+.fact:nth-child(4) { animation-delay: -2.1s; }
+@keyframes bob {
+  0%, 100% { transform: rotate(var(--r)) translateY(0); }
+  50%      { transform: rotate(calc(var(--r) * -1)) translateY(-10px); }
+}
+.fact:hover { animation: spin 0.8s ease-in-out; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.fact span { font-family: "Press Start 2P", monospace; font-size: 10px; letter-spacing: 2px; margin-bottom: 6px; }
+.fact:nth-child(1) strong { font-family: "Rye", serif; }
+.fact:nth-child(2) strong { font-family: "Creepster", cursive; font-size: 34px; letter-spacing: 2px; }
+.fact:nth-child(3) strong { font-family: "Permanent Marker", cursive; }
+.countdown strong { font-family: "VT323", monospace; font-size: 34px; -webkit-text-stroke: 0; text-shadow: 2px 2px 0 var(--black); }
+
+/* Boxen: pulsierender Rahmen */
+.box { animation: outline 1.5s steps(2) infinite; }
+@keyframes outline { 50% { outline-color: var(--black); border-color: var(--pink); } }
+.box h2 { font-family: "Rubik Glitch", Impact, sans-serif; font-weight: normal; font-size: 28px; }
+.box h2 .blink { font-family: "Press Start 2P", monospace; font-size: 18px; }
+.small { font-family: "Special Elite", monospace; }
+.question { font-family: "Fredericka the Great", serif; font-size: 26px; animation: nudge 4s ease-in-out infinite; }
+@keyframes nudge { 50% { transform: translateX(8px) rotate(0.5deg); } }
+
+/* Jedes Formularfeld eine andere Schrift, Labels wippen leicht */
+#signup-form > label, #signup-form > fieldset { animation: wiggle 5s ease-in-out infinite; }
+#signup-form > :nth-child(2n) { animation-delay: -2.5s; }
+@keyframes wiggle { 25% { transform: rotate(-0.6deg); } 75% { transform: rotate(0.6deg); } }
+#signup-form > :nth-child(1) { font-family: "Permanent Marker", cursive; }
+#signup-form > :nth-child(2) { font-family: "Special Elite", monospace; }
+#signup-form > :nth-child(3) { font-family: "Bangers", cursive; font-size: 22px; letter-spacing: 1px; }
+#signup-form > :nth-child(4) { font-family: "Caveat", cursive; font-size: 24px; }
+#signup-form > :nth-child(5) { font-family: "UnifrakturMaguntia", serif; font-size: 22px; }
+#signup-form > :nth-child(6) { font-family: "Indie Flower", cursive; font-size: 22px; }
+#signup-form > :nth-child(7) { font-family: "Rye", serif; }
+label small { font-family: "Special Elite", monospace; }
+legend { font-family: "Bangers", cursive; font-weight: normal; letter-spacing: 1px; }
+input:focus, textarea:focus { animation: focusbuzz 0.25s linear 2; }
+@keyframes focusbuzz { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+#companions-out { font-family: "Monoton", cursive; display: inline-block; animation: hop 0.8s ease-in-out infinite; }
+
+/* Buttons pulsieren */
+.btn-go { font-family: "Bangers", cursive; font-weight: normal; letter-spacing: 2px; font-size: 26px; animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.08) rotate(-2deg); } }
+.btn-meh { font-family: "UnifrakturMaguntia", serif; font-size: 16px; }
+.btn-meh:hover { animation: spin 0.6s ease-in-out; }
+
+#done h2 { font-family: "Monoton", cursive; font-weight: normal; font-size: 48px; }
+#done p { font-family: "Pacifico", cursive; }
+
+footer { font-family: "Nosifer", cursive; font-size: 11px; }
+footer p { animation: breathe 3s ease-in-out infinite; }
+
+/* Mauszeiger-Glitzer (via app.js) */
+.sparkle { position: fixed; pointer-events: none; z-index: 99; font-size: 18px; animation: sparkle 0.8s ease-out forwards; }
+@keyframes sparkle { to { transform: translateY(30px) scale(0.2) rotate(180deg); opacity: 0; } }
+
+@media (max-width: 600px) {
+  .marquee { font-size: 10px; }
+  .question { font-size: 21px; }
+  #done h2 { font-size: 32px; }
+}
+
+/* Wer weniger Bewegung will, bekommt sie auch (steht am Schluss, damit es gewinnt) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .floaters { display: none; }
+}

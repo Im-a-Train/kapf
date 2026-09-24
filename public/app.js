@@ -17,6 +17,7 @@ let event = { maxCompanions: 3, date: '2027-05-22' };
 api('/api/event').then(({ data }) => {
   event = { ...event, ...data };
   $('#title').textContent = event.title;
+  splitTitle();
   $('#subtitle').textContent = event.subtitle;
   $('#date').textContent = event.dateLabel;
   $('#time').textContent = event.time ?? '';
@@ -170,3 +171,37 @@ function confetti() {
 if (store.get('riddleToken')) unlockSignup();
 else loadRiddle();
 syncCompanions();
+
+// ---------- Mehr Bewegung ----------
+// Titel in einzelne Buchstaben zerlegen, damit jeder für sich hüpfen kann
+function splitTitle() {
+  const h1 = $('#title');
+  const text = h1.textContent;
+  h1.setAttribute('aria-label', text);
+  h1.replaceChildren(...[...text].map((c, i) => {
+    const s = document.createElement('span');
+    s.className = 'ch';
+    s.setAttribute('aria-hidden', 'true');
+    s.textContent = c === ' ' ? ' ' : c;
+    s.style.animationDelay = `${i * 0.08}s`;
+    return s;
+  }));
+}
+splitTitle();
+
+// Glitzer hinter dem Mauszeiger
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let lastSparkle = 0;
+if (!reduced) {
+  addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || e.timeStamp - lastSparkle < 60) return;
+    lastSparkle = e.timeStamp;
+    const s = document.createElement('span');
+    s.className = 'sparkle';
+    s.textContent = ['✨', '⭐', '💖', '🎉'][Math.floor(Math.random() * 4)];
+    s.style.left = `${e.clientX + 6}px`;
+    s.style.top = `${e.clientY + 6}px`;
+    document.body.append(s);
+    s.addEventListener('animationend', () => s.remove());
+  });
+}
