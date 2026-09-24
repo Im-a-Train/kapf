@@ -39,7 +39,7 @@
         <table>
           <thead>
             <tr>
-              <th>Name</th><th>Kommt</th><th>+</th><th>Begleitung</th><th>Essen</th><th>Nachricht</th><th>Notiz</th><th>Datum</th><th></th>
+              <th>Name</th><th>Kommt</th><th>+</th><th>Begleitung</th><th title="Übernachtet">🏕️</th><th>Essen</th><th>Nachricht</th><th>Notiz</th><th>Datum</th><th></th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -59,6 +59,9 @@
       </label>
       <label>Begleitpersonen <input name="companions" type="number" min="0"></label>
       <label>Namen Begleitung <input name="companionNames" maxlength="300"></label>
+      <label>Übernachtet
+        <select name="sleepover"><option value="no">Nein</option><option value="yes">Ja</option></select>
+      </label>
       <label>Essen <input name="diet" maxlength="300"></label>
       <label>Nachricht <textarea name="message" rows="3" maxlength="1000"></textarea></label>
       <label>Interne Notiz <textarea name="note" rows="2" maxlength="1000"></textarea></label>

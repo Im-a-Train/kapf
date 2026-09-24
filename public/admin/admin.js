@@ -41,6 +41,7 @@ function render() {
     ['Zusagen', yes.length],
     ['Personen total', yes.reduce((n, r) => n + 1 + (r.companions || 0), 0)],
     ['Absagen', registrations.length - yes.length],
+    ['Übernachten (Pers.)', yes.filter((r) => r.sleepover === 'yes').reduce((n, r) => n + 1 + (r.companions || 0), 0)],
     ['Mit Essenswunsch', yes.filter((r) => r.diet).length],
   ];
   $('#stats').replaceChildren(...stats.map(([label, n]) => el('div', { class: 'stat' }, el('b', {}, n), label)));
@@ -50,6 +51,7 @@ function render() {
     el('td', {}, el('span', { class: `badge ${r.attending}` }, r.attending === 'yes' ? 'Ja' : 'Nein')),
     el('td', {}, r.companions || ''),
     el('td', { class: 'wrap' }, r.companionNames),
+    el('td', {}, r.sleepover === 'yes' ? '🏕️' : ''),
     el('td', { class: 'wrap' }, r.diet),
     el('td', { class: 'wrap' }, r.message),
     el('td', { class: 'wrap' }, r.note),
@@ -77,6 +79,7 @@ function edit(r) {
   editing = r;
   const f = $('#edit-form').elements;
   for (const k of ['name', 'email', 'attending', 'companions', 'companionNames', 'diet', 'message', 'note']) f[k].value = r[k] ?? '';
+  f.sleepover.value = r.sleepover === 'yes' ? 'yes' : 'no';
   $('#edit-error').textContent = '';
   $('#edit').showModal();
 }

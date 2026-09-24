@@ -106,6 +106,8 @@ f.companions.addEventListener('input', syncCompanions);
 form.addEventListener('change', () => {
   const no = f.attending.value === 'no';
   $('#companions-label').hidden = no;
+  $('#sleepover-label').hidden = no;
+  if (no) f.sleepover.checked = false;
   if (no) { f.companions.value = 0; syncCompanions(); }
 });
 
@@ -284,6 +286,7 @@ if (!reduced) {
 
   let lastShake = 0;
   let last = null;
+  const hard = [];
   addEventListener('devicemotion', (e) => {
     const a = e.accelerationIncludingGravity;
     if (!a || a.x == null) return;
@@ -298,6 +301,12 @@ if (!reduced) {
         document.body.classList.add('shaken');
         navigator.vibrate?.(80);
       }
+      // Fest schütteln (viele starke Ausschläge in einer Sekunde): alles fällt zusammen
+      if (delta > 35) {
+        hard.push(e.timeStamp);
+        while (hard.length && e.timeStamp - hard[0] > 1000) hard.shift();
+        if (hard.length >= 6) { hard.length = 0; collapse(); }
+      }
     }
     last = { x: a.x, y: a.y, z: a.z };
   });
@@ -309,4 +318,75 @@ if (!reduced) {
     }
   };
   addEventListener('touchend', askMotion, { once: true });
+}
+
+// ---------- Fest schütteln = alles fällt zusammen ----------
+// Auf dem Handy per Bewegungssensor (oben), auf dem Desktop per wildem Mausschütteln.
+// Der Knopf «Ufruume» stellt alles wieder hin.
+const FALLING = 'header > *, .fact, .box:not([hidden]) > :not(form), .box:not([hidden]) form > *, footer, .guy:not(.gone), .marquee';
+let fallen = null;
+
+function collapse() {
+  if (fallen || reduced) return;
+  dispatchEvent(new Event('kapf:collapse'));
+  navigator.vibrate?.([100, 50, 200]);
+  const floor = innerHeight;
+  let pile = 0;
+  const els = [...document.querySelectorAll(FALLING)]
+    .map((el) => ({ el, r: el.getBoundingClientRect() }))
+    .filter(({ r }) => r.width && r.height)
+    .sort((a, b) => b.r.bottom - a.r.bottom);
+  fallen = els.map(({ el, r }, i) => {
+    let dy;
+    if (r.top > floor) {
+      dy = floor; // liegt unterhalb vom Bildschirm: fällt einfach weiter
+    } else {
+      dy = Math.max(0, floor - r.bottom - pile);
+      pile = Math.min(floor * 0.6, pile + Math.min(r.height, 60) * 0.5);
+    }
+    const dx = (Math.random() - 0.5) * 120;
+    const rot = (Math.random() - 0.5) * (r.width > 300 ? 40 : 160);
+    const anim = el.animate([
+      { transform: 'translate(0, 0) rotate(0deg)' },
+      { transform: `translate(${dx * 0.8}px, ${dy}px) rotate(${rot}deg)`, offset: 0.7 },
+      { transform: `translate(${dx * 0.9}px, ${dy - 18}px) rotate(${rot * 1.05}deg)`, offset: 0.85 },
+      { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)` },
+    ], { duration: 900 + Math.random() * 600, delay: i * 25 + Math.random() * 150, easing: 'ease-in', fill: 'forwards' });
+    return anim;
+  });
+  document.body.classList.add('collapsed');
+  setTimeout(() => { $('#tidy-btn').hidden = false; }, 1200);
+}
+
+function tidy() {
+  if (!fallen) return;
+  $('#tidy-btn').hidden = true;
+  const anims = fallen;
+  fallen = null;
+  for (const a of anims) {
+    a.updatePlaybackRate(1.8);
+    a.reverse();
+  }
+  Promise.all(anims.map((a) => a.finished.catch(() => {}))).then(() => {
+    for (const a of anims) a.cancel();
+    document.body.classList.remove('collapsed');
+    dispatchEvent(new Event('kapf:tidy'));
+    confetti(120);
+  });
+}
+$('#tidy-btn').addEventListener('click', tidy);
+
+// Desktop: Maus schnell hin und her schütteln
+{
+  let dir = 0;
+  const flips = [];
+  addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || Math.abs(e.movementX) < 25) return;
+    const d = Math.sign(e.movementX);
+    if (d === dir) return;
+    dir = d;
+    flips.push(e.timeStamp);
+    while (flips.length && e.timeStamp - flips[0] > 1500) flips.shift();
+    if (flips.length >= 10) { flips.length = 0; collapse(); }
+  });
 }

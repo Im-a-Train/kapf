@@ -6,6 +6,18 @@ Anmeldeseite für den 30. Geburtstag von **Tim, Röbu, Chrigu & Melu**
 Bad UI mit Absicht (inspiriert von [glunz.ch](https://glunz.ch)). Anmelden kann nur, wer ein Rätsel löst.
 Dazu gibt es ein kleines Admin-UI unter `/admin`.
 
+Extras:
+- **Aafahrt** (klappt hinter «WO» auf): Startort wählen (Bärn, Oberdiessbach, Herblige, Schüpbach,
+  frei eingeben oder Handy-Standort), dann SBB-Verbindungen zur Haltestelle «Röthenbach i.E., Fischbach»,
+  Auto-Route in Google Maps, swisstopo-Karte und ein GPX (Velo, z Fuess, Auto) zum Herunterladen.
+  Die Daten kommen direkt im Browser von [transport.opendata.ch](https://transport.opendata.ch)
+  (SBB-Fahrplan), [BRouter](https://brouter.de) (GPX) und [swisstopo](https://map.geo.admin.ch) (Karte).
+  Der Server braucht dafür keinen Internetzugang.
+- **Crew:** Tim, Röbu, Chrigu & Melu klettern als Strichmännchen auf der Seite herum und fahren Velo,
+  sitzen am PC oder fahren Ski (`public/crew.js`).
+- **Fest schütteln** (Handy) oder die Maus wild hin und her bewegen: alles fällt zusammen. «Ufruume» stellt es wieder hin.
+- **Übernachten:** Checkbox im Formular, im Admin als 🏕️ und im CSV als `sleepover`.
+
 ## Starten
 
 Voraussetzung: Node.js ≥ 20. Es gibt keine Abhängigkeiten, `npm install` ist nicht nötig.
@@ -51,14 +63,14 @@ Hinweise:
 ## Aufbau
 
 ```
-config/event.js      Event-Infos (Datum, Ort, Zeit, …) und Rätsel – hier anpassen
+config/event.js      Event-Infos (Datum, Ort, Koordinaten, Haltestelle, Startorte, …) und Rätsel – hier anpassen
 src/server.js        Einstiegspunkt (liest env, startet Server)
 src/app.js           Routen/API (öffentlich + Admin), statische Dateien
 src/registration.js  Validierung der Anmeldung + CSV-Export
 src/riddles.js       Rätsel-Auswahl und Antwortprüfung
 src/auth.js          HMAC-signierte Tokens (Rätsel gelöst / Admin-Session)
 src/store.js         JSON-Datei-Speicher (austauschbar)
-public/              Anmeldeseite (Bad UI)
+public/              Anmeldeseite (Bad UI): app.js, anfahrt.js (Aafahrt), crew.js (Strichmännchen)
 public/admin/        Admin-UI (Good UI)
 test/                API-Tests (node:test)
 ```

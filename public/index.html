@@ -34,9 +34,67 @@
   <main>
     <section class="facts">
       <div class="fact tilt-l"><span>WANN</span><strong id="date">Samstag, 22.05.27</strong><em id="time"></em></div>
-      <div class="fact tilt-r"><span>WO</span><strong id="location">Kapf</strong></div>
+      <button type="button" class="fact tilt-r fact-where" id="where-btn" aria-expanded="false" aria-controls="anfahrt">
+        <span>WO</span><strong id="location">Kapf</strong><em class="where-more">🚆 🚗 🚲 Aafahrt ▼</em>
+      </button>
       <div class="fact tilt-l"><span>WER</span><strong id="hosts">Tim · Röbu · Chrigu · Melu</strong></div>
       <div class="fact countdown tilt-r"><span>NOCH</span><strong id="countdown">…</strong><em>Sekunden (ungefähr)</em></div>
+    </section>
+
+    <!-- Anfahrt (klappt hinter «WO» auf) -->
+    <section id="anfahrt" class="box" hidden>
+      <h2><span class="blink">▶</span> Aafahrt: Wie chunnsch i Kapf?</h2>
+      <p class="small">
+        📍 <strong id="coords-label">46°51.88922'N, 7°46.04185'E</strong> ·
+        Nächste Haltestelle: <strong id="stop-name">Röthenbach i.E., Fischbach</strong> (ca. 700 m z Fuess)
+      </p>
+
+      <fieldset class="origins">
+        <legend>Vo wo chunnsch?</legend>
+        <div id="origin-list" class="chips"></div>
+        <label class="radio"><input type="radio" name="origin" value="__other"> Nöime angers:</label>
+        <input id="origin-other" placeholder="Ort iigäh, z. B. Thun" aria-label="Anderer Startort" hidden>
+        <button type="button" class="btn btn-meh" id="origin-geo">📍 Mys Handy weiss es</button>
+      </fieldset>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab" role="tab" data-mode="oev" aria-selected="true">🚆 SBB</button>
+        <button type="button" class="tab" role="tab" data-mode="auto" aria-selected="false">🚗 Auto</button>
+        <button type="button" class="tab" role="tab" data-mode="gpx" aria-selected="false">🗺️ GPX</button>
+      </div>
+
+      <div class="tabpanel" data-panel="oev">
+        <p class="small">Verbindungen am <strong id="oev-date">22.05.27</strong>, Ankunft spätestens <strong id="oev-arrive">16:00</strong>:</p>
+        <ul id="oev-list" class="conns"><li class="muted">Zersch säge, vo wo chunnsch. ☝️</li></ul>
+        <p class="row">
+          <a id="sbb-link" class="btn btn-go small-btn" href="https://www.sbb.ch" target="_blank" rel="noopener">Fahrplan uf sbb.ch ↗</a>
+        </p>
+      </div>
+
+      <div class="tabpanel" data-panel="auto" hidden>
+        <p>Mit em Auto bis vor d Hütte. Parkplätz: frag Melu.</p>
+        <p class="row">
+          <a id="car-link" class="btn btn-go small-btn" href="#" target="_blank" rel="noopener">Route in Google Maps ↗</a>
+          <a id="swisstopo-link" class="btn btn-meh" href="#" target="_blank" rel="noopener">swisstopo-Karte ↗</a>
+        </p>
+      </div>
+
+      <div class="tabpanel" data-panel="gpx" hidden>
+        <p>Route als GPX fürs Velo-Navi, d Uhr oder d Wanderapp. Start: <strong id="gpx-start">– (zersch obe uswähle)</strong></p>
+        <div class="row">
+          <select id="gpx-profile" aria-label="Wie unterwegs">
+            <option value="trekking">🚲 Velo</option>
+            <option value="hiking-mountain">🥾 z Fuess</option>
+            <option value="car-fast">🚗 Auto</option>
+          </select>
+          <button type="button" class="btn btn-go small-btn" id="gpx-btn">GPX abelade ⬇</button>
+        </div>
+        <p id="gpx-info" class="feedback" role="status"></p>
+      </div>
+
+      <iframe id="map" class="map" title="Karte vom Kapf" loading="lazy"
+        src="https://map.geo.admin.ch/#/embed?lang=de&amp;center=2625065,1190462&amp;z=7&amp;bgLayer=ch.swisstopo.pixelkarte-farbe&amp;crosshair=marker,2625065,1190462"></iframe>
+      <p class="small">Karte: © <a href="https://www.swisstopo.admin.ch" target="_blank" rel="noopener">swisstopo</a> · Fahrplan: <a href="https://transport.opendata.ch" target="_blank" rel="noopener">transport.opendata.ch</a> · Routen: <a href="https://brouter.de" target="_blank" rel="noopener">BRouter</a></p>
     </section>
 
     <!-- Schritt 1: Rätsel -->
@@ -83,6 +141,11 @@
           <input name="companionNames" maxlength="300">
         </label>
 
+        <label class="sleepover" id="sleepover-label">
+          <input type="checkbox" name="sleepover" value="yes">
+          <span>🏕️ Ich schlafe gerne dort. <small>(Schlafsack mitnehmen. Schnarchen auf eigene Gefahr.)</small></span>
+        </label>
+
         <label>Allergien, Vegi, Vegan, sonstige Extrawürste?
           <input name="diet" maxlength="300" placeholder="z. B. «keine Pilze, ausser die lustigen»">
         </label>
@@ -116,6 +179,11 @@
     <p>Design: absichtlich. Beschwerden an Melu. <a href="/admin/" class="sneaky">π</a></p>
   </footer>
 
+  <div id="crew" class="crew" aria-hidden="true"></div>
+  <button type="button" id="tidy-btn" class="btn btn-go tidy" hidden>🧹 Ufruume!</button>
+
   <script src="/app.js" type="module"></script>
+  <script src="/anfahrt.js" type="module"></script>
+  <script src="/crew.js" type="module"></script>
 </body>
 </html>

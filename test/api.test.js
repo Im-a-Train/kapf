@@ -57,7 +57,7 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
 
   const reg = await call('/api/registrations', {
     method: 'POST',
-    body: { riddleToken: solved.data.token, name: 'Heidi', attending: 'yes', companions: '2', diet: 'vegi' },
+    body: { riddleToken: solved.data.token, name: 'Heidi', attending: 'yes', companions: '2', diet: 'vegi', sleepover: 'on' },
   });
   assert.equal(reg.status, 201);
 
@@ -70,17 +70,28 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
   const list = await call('/api/admin/registrations', { cookie });
   assert.equal(list.data.length, 1);
   assert.equal(list.data[0].companions, 2);
+  assert.equal(list.data[0].sleepover, 'yes');
 
   const patched = await call(`/api/admin/registrations/${reg.data.id}`, { method: 'PATCH', cookie, body: { attending: 'no', note: 'abgesagt per SMS' } });
   assert.equal(patched.data.attending, 'no');
   assert.equal(patched.data.companions, 0);
+  assert.equal(patched.data.sleepover, 'no');
   assert.equal(patched.data.note, 'abgesagt per SMS');
 
   const csv = await fetch(`${base}/api/admin/registrations.csv`, { headers: { Cookie: cookie } });
-  assert.match(await csv.text(), /Heidi/);
+  const csvText = await csv.text();
+  assert.match(csvText, /Heidi/);
+  assert.match(csvText, /sleepover/);
 
   assert.equal((await call(`/api/admin/registrations/${reg.data.id}`, { method: 'DELETE', cookie })).status, 200);
   assert.equal((await call('/api/admin/registrations', { cookie })).data.length, 0);
+});
+
+test('Event liefert Anfahrt (Koordinaten, Haltestelle, Startpunkte)', async () => {
+  const { data } = await call('/api/event');
+  assert.equal(data.stop.id, '8576713');
+  assert.ok(data.coords.lat > 46.86 && data.coords.lon > 7.76);
+  assert.deepEqual(data.origins.map((o) => o.label), ['Bärn', 'Oberdiessbach', 'Herblige', 'Schüpbach']);
 });
 
 test('Statische Dateien & kein Path-Traversal', async () => {

@@ -12,6 +12,23 @@ export const event = {
   // Anmeldeschluss (ISO-Datum) – danach nimmt die API keine Anmeldungen mehr an. null = offen.
   registrationDeadline: null,
   maxCompanions: 3,
+
+  // Anfahrt. Koordinaten vom Kapf: 46°51.88922'N, 7°46.04185'E
+  coords: { lat: 46.864820, lon: 7.767364 },
+  coordsLabel: "46°51.88922'N, 7°46.04185'E",
+  // Dasselbe in Schweizer Landeskoordinaten (LV95), für die swisstopo-Karte
+  lv95: { e: 2625065, n: 1190462 },
+  // Nächste Haltestelle (ID aus dem SBB-Fahrplan, transport.opendata.ch)
+  stop: { id: '8576713', name: 'Röthenbach i.E., Fischbach', lat: 46.860244, lon: 7.760571 },
+  // Ankunft spätestens um … (für die ÖV-Verbindungen)
+  arriveBy: '16:00',
+  // «Vo wo chunnsch?» – feste Startpunkte. `query`/`stationId`: Haltestelle im SBB-Fahrplan.
+  origins: [
+    { label: 'Bärn', query: 'Bern', stationId: '8507000', lat: 46.948823, lon: 7.439123 },
+    { label: 'Oberdiessbach', query: 'Oberdiessbach', stationId: '8508255', lat: 46.839255, lon: 7.617808 },
+    { label: 'Herblige', query: 'Herbligen, Dorf', stationId: '8583108', lat: 46.826839, lon: 7.607662 },
+    { label: 'Schüpbach', query: 'Schüpbach, Dorf', stationId: '8508988', lat: 46.92688, lon: 7.734342 },
+  ],
 };
 
 // Rätsel: Die Antwort wird serverseitig geprüft.
