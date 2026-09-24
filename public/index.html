@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>4 × 30 im Kapf</title>
+  <meta name="description" content="Tim, Röbu, Chrigu & Melu werden 30. Anmeldung nur mit Rätsel.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎂</text></svg>">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<!--
+   Wer das liest, kommt sicher ans Fest.
+   Die Antworten stehen aber nicht hier. Netter Versuch.
+-->
+  <div class="marquee" aria-hidden="true"><span id="marquee-text">+++ TIM +++ RÖBU +++ CHRIGU +++ MELU +++ 30 +++ KAPF +++ 22.05.27 +++ BITTE NICHT VERGESSEN +++</span></div>
+
+  <header>
+    <pre class="ascii" aria-label="KAPF 30">
+ _  __    _    ____  _____   _____  ___
+| |/ /   / \  |  _ \|  ___| |___ / / _ \
+| ' /   / _ \ | |_) | |_      |_ \| | | |
+| . \  / ___ \|  __/|  _|    ___) | |_| |
+|_|\_\/_/   \_\_|   |_|     |____/ \___/
+</pre>
+    <h1 id="title">4 × 30 = 120</h1>
+    <p class="subtitle" id="subtitle">Tim, Röbu, Chrigu &amp; Melu werden 30. Zusammen. Im Kapf.</p>
+  </header>
+
+  <main>
+    <section class="facts">
+      <div class="fact tilt-l"><span>WANN</span><strong id="date">Samstag, 22.05.27</strong><em id="time"></em></div>
+      <div class="fact tilt-r"><span>WO</span><strong id="location">Kapf</strong></div>
+      <div class="fact tilt-l"><span>WER</span><strong id="hosts">Tim · Röbu · Chrigu · Melu</strong></div>
+      <div class="fact countdown tilt-r"><span>NOCH</span><strong id="countdown">…</strong><em>Sekunden (ungefähr)</em></div>
+    </section>
+
+    <!-- Schritt 1: Rätsel -->
+    <section id="riddle" class="box">
+      <h2><span class="blink">▶</span> Schritt 1: Beweise, dass du würdig bist</h2>
+      <p class="small">Anmelden darf nur, wer das Rätsel löst. So sind die Regeln. Wir haben sie gemacht.</p>
+      <form id="riddle-form" autocomplete="off">
+        <p class="question" id="riddle-question">Rätsel wird geladen …</p>
+        <input id="riddle-answer" name="answer" placeholder="deine Antwort, bitte" aria-label="Antwort" required>
+        <div class="row">
+          <button type="submit" class="btn btn-go">LÖSEN!!!</button>
+          <button type="button" class="btn btn-meh" id="riddle-skip">anderes Rätsel</button>
+          <button type="button" class="btn btn-meh" id="riddle-hint-btn" hidden>Tipp 🙈</button>
+        </div>
+        <p id="riddle-feedback" class="feedback" role="status"></p>
+        <p id="riddle-hint" class="hint" hidden></p>
+      </form>
+    </section>
+
+    <!-- Schritt 2: Anmeldung -->
+    <section id="signup" class="box" hidden>
+      <h2><span class="blink">▶</span> Schritt 2: Anmelden</h2>
+      <form id="signup-form" novalidate>
+        <label>Wie heisst du? <small>(richtiger Name, nicht «Dä vo letscht Mal»)</small>
+          <input name="name" maxlength="100" required>
+        </label>
+
+        <label>E-Mail <small>(freiwillig – falls wir dich erreichen müssen)</small>
+          <input name="email" type="email" maxlength="200">
+        </label>
+
+        <fieldset class="attending">
+          <legend>Kommst du?</legend>
+          <label class="radio"><input type="radio" name="attending" value="yes"> JA, logisch!</label>
+          <label class="radio"><input type="radio" name="attending" value="no"> Nein <small>(wir sind nicht beleidigt)</small> <small>(doch)</small></label>
+        </fieldset>
+
+        <label id="companions-label">Wie viele Personen bringst du mit? <strong id="companions-out">0</strong>
+          <input name="companions" type="range" min="0" max="3" value="0" step="1">
+          <small id="companions-quip">Solo. Mutig.</small>
+        </label>
+
+        <label id="companion-names-label" hidden>Wie heissen die?
+          <input name="companionNames" maxlength="300">
+        </label>
+
+        <label>Allergien, Vegi, Vegan, sonstige Extrawürste?
+          <input name="diet" maxlength="300" placeholder="z. B. «keine Pilze, ausser die lustigen»">
+        </label>
+
+        <label>Nachricht an die Geburtstagskinder
+          <textarea name="message" rows="3" maxlength="1000" placeholder="Glückwünsche, Songwünsche, Drohungen …"></textarea>
+        </label>
+
+        <div class="submit-zone">
+          <button type="submit" class="btn btn-go" id="submit-btn">ANMELDEN</button>
+        </div>
+        <ul id="signup-errors" class="errors" role="alert"></ul>
+      </form>
+    </section>
+
+    <!-- Schritt 3: Danke -->
+    <section id="done" class="box" hidden>
+      <h2>🎉 Merci! 🎉</h2>
+      <p id="done-text"></p>
+      <pre class="ascii small-ascii">
+   ( (  ( (
+    ) )  ) )
+  .-------------.
+  | 30 30 30 30 |
+  |_____________|
+</pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>Design: absichtlich. Beschwerden an Melu. <a href="/admin/" class="sneaky">π</a></p>
+  </footer>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

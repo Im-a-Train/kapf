@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Kapf Admin</title>
+  <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+  <header>
+    <h1>🎂 Kapf Admin</h1>
+    <button id="logout" class="ghost" hidden>Logout</button>
+  </header>
+
+  <main>
+    <form id="login" hidden>
+      <h2>Login</h2>
+      <input type="password" name="password" placeholder="Passwort" autocomplete="current-password" required autofocus>
+      <button>Einloggen</button>
+      <p id="login-error" class="error"></p>
+    </form>
+
+    <section id="dashboard" hidden>
+      <div class="stats" id="stats"></div>
+
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Suchen …">
+        <select id="filter">
+          <option value="">Alle</option>
+          <option value="yes">Kommen</option>
+          <option value="no">Kommen nicht</option>
+        </select>
+        <button id="reload" class="ghost">↻ Neu laden</button>
+        <a href="/api/admin/registrations.csv" class="button">CSV exportieren</a>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th><th>Kommt</th><th>+</th><th>Begleitung</th><th>Essen</th><th>Nachricht</th><th>Notiz</th><th>Datum</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p id="empty" class="muted" hidden>Noch keine Anmeldungen.</p>
+    </section>
+  </main>
+
+  <dialog id="edit">
+    <form method="dialog" id="edit-form">
+      <h2>Anmeldung bearbeiten</h2>
+      <label>Name <input name="name" required maxlength="100"></label>
+      <label>E-Mail <input name="email" type="email" maxlength="200"></label>
+      <label>Kommt
+        <select name="attending"><option value="yes">Ja</option><option value="no">Nein</option></select>
+      </label>
+      <label>Begleitpersonen <input name="companions" type="number" min="0"></label>
+      <label>Namen Begleitung <input name="companionNames" maxlength="300"></label>
+      <label>Essen <input name="diet" maxlength="300"></label>
+      <label>Nachricht <textarea name="message" rows="3" maxlength="1000"></textarea></label>
+      <label>Interne Notiz <textarea name="note" rows="2" maxlength="1000"></textarea></label>
+      <p class="error" id="edit-error"></p>
+      <div class="actions">
+        <button value="cancel" formnovalidate class="ghost">Abbrechen</button>
+        <button value="save" id="save">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/admin/admin.js" type="module"></script>
+</body>
+</html>
