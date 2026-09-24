@@ -73,7 +73,8 @@
       </div>
 
       <div class="tabpanel" data-panel="auto" hidden>
-        <p>Mit em Auto bis vor d Hütte. Parkplätz: frag Melu.</p>
+        <p>Mit em Auto bis vor d Hütte. Parkplätz het's gnue. 🅿️<br>
+          <small>Achtung: Dis Auto wird evtl. echli dräckig. Nid mit em frisch gwäschne Sunntigswage cho.</small></p>
         <p class="row">
           <a id="car-link" class="btn btn-go small-btn" href="#" target="_blank" rel="noopener">Route in Google Maps ↗</a>
           <a id="swisstopo-link" class="btn btn-meh" href="#" target="_blank" rel="noopener">swisstopo-Karte ↗</a>
@@ -162,6 +163,27 @@
       </form>
     </section>
 
+    <!-- Minigames (games.js) -->
+    <section id="games" class="box games">
+      <h2><span class="blink">▶</span> Spielplatz: Wer langweilig het</h2>
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab game-tab" role="tab" data-game="downhill" aria-selected="true">⛷️ Downhill</button>
+        <button type="button" class="tab game-tab" role="tab" data-game="tent" aria-selected="false">⛺ Zelt bauen</button>
+        <button type="button" class="tab game-tab" role="tab" data-game="pong" aria-selected="false">🏓 Pong</button>
+      </div>
+      <pre id="game-screen" class="game-screen" aria-label="Minigame" tabindex="0"></pre>
+      <div class="game-ctl">
+        <button type="button" class="btn btn-go" data-key="action">LOS / DROP</button>
+        <span class="arrows">
+          <button type="button" class="btn btn-meh" data-key="left" aria-label="Links">◀</button>
+          <button type="button" class="btn btn-meh" data-key="up" aria-label="Hoch">▲</button>
+          <button type="button" class="btn btn-meh" data-key="down" aria-label="Runter">▼</button>
+          <button type="button" class="btn btn-meh" data-key="right" aria-label="Rechts">▶</button>
+        </span>
+      </div>
+      <p id="game-status" class="small"></p>
+    </section>
+
     <!-- Schritt 3: Danke -->
     <section id="done" class="box" hidden>
       <h2>🎉 Merci! 🎉</h2>
@@ -192,5 +214,6 @@
   <script src="/anfahrt.js" type="module"></script>
   <script src="/crew.js" type="module"></script>
   <script src="/music.js" type="module"></script>
+  <script src="/games.js" type="module"></script>
 </body>
 </html>

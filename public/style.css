@@ -525,3 +525,30 @@ body.collapsed { overflow: hidden; }
 #done-cal { margin: 24px 0 8px; }
 #done-cal .btn { text-decoration: none; display: inline-block; }
 #done-cal small { font-family: "Special Elite", monospace; font-size: 14px; }
+
+/* Minigames (games.js) */
+.games .tabs { margin-top: 8px; }
+.game-screen {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 10px;
+  background: #000;
+  color: #33ff66;
+  border: 4px solid var(--black);
+  box-shadow: 6px 6px 0 var(--pink);
+  font: clamp(10px, 3.4vw, 20px)/1.15 "VT323", "Courier New", monospace;
+  white-space: pre;
+  overflow: hidden;
+  text-shadow: 0 0 4px #33ff66;
+  touch-action: manipulation;
+  user-select: none;
+  cursor: pointer;
+  animation: none;
+}
+.game-screen:focus-visible { outline: 4px solid var(--pink); }
+.game-ctl { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
+.game-ctl .btn { min-width: 64px; font-size: 24px; touch-action: none; user-select: none; -webkit-user-select: none; animation: none; }
+.game-ctl .btn-go { font-size: 20px; }
+.game-ctl .arrows { display: flex; gap: 10px; }
+.game-ctl .arrows:not(:has(button:not([hidden]))) { display: none; }

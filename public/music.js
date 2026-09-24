@@ -143,14 +143,48 @@ async function start() {
     nextIdx = 0;
     timer = setInterval(schedule, 100);
   }
-  render();
+  // Minigames (games.js)
+addEventListener('kapf:sfx', ({ detail }) => {
+  if (!playing) return;
+  const t = ctx.currentTime;
+  const notes = {
+    hit: [[84, 0.05]],
+    coin: [[88, 0.06], [95, 0.12]],
+    drop: [[60, 0.08]],
+    perfect: [[79, 0.06], [91, 0.1]],
+    crash: [],
+    win: [[72, 0.1], [76, 0.1], [79, 0.1], [84, 0.3]],
+  }[detail];
+  if (detail === 'crash') { tone('square', 300, t, 0.4, 0.5, 50); hit(t, 0.3, 0.6, 300); return; }
+  let at = t;
+  for (const [n, d] of notes ?? []) { tone('square', midiHz(n), at, d, 0.4); at += d; }
+});
+
+render();
 }
 
 function stop() {
   playing = false;
   clearInterval(timer);
   ctx?.suspend();
-  render();
+  // Minigames (games.js)
+addEventListener('kapf:sfx', ({ detail }) => {
+  if (!playing) return;
+  const t = ctx.currentTime;
+  const notes = {
+    hit: [[84, 0.05]],
+    coin: [[88, 0.06], [95, 0.12]],
+    drop: [[60, 0.08]],
+    perfect: [[79, 0.06], [91, 0.1]],
+    crash: [],
+    win: [[72, 0.1], [76, 0.1], [79, 0.1], [84, 0.3]],
+  }[detail];
+  if (detail === 'crash') { tone('square', 300, t, 0.4, 0.5, 50); hit(t, 0.3, 0.6, 300); return; }
+  let at = t;
+  for (const [n, d] of notes ?? []) { tone('square', midiHz(n), at, d, 0.4); at += d; }
+});
+
+render();
 }
 
 function render() {
@@ -192,6 +226,23 @@ addEventListener('kapf:tidy', () => {
   if (!playing) return;
   const t = ctx.currentTime;
   [72, 76, 79, 84].forEach((n, i) => tone('square', midiHz(n + 12), t + i * 0.08, 0.1, 0.4));
+});
+
+// Minigames (games.js)
+addEventListener('kapf:sfx', ({ detail }) => {
+  if (!playing) return;
+  const t = ctx.currentTime;
+  const notes = {
+    hit: [[84, 0.05]],
+    coin: [[88, 0.06], [95, 0.12]],
+    drop: [[60, 0.08]],
+    perfect: [[79, 0.06], [91, 0.1]],
+    crash: [],
+    win: [[72, 0.1], [76, 0.1], [79, 0.1], [84, 0.3]],
+  }[detail];
+  if (detail === 'crash') { tone('square', 300, t, 0.4, 0.5, 50); hit(t, 0.3, 0.6, 300); return; }
+  let at = t;
+  for (const [n, d] of notes ?? []) { tone('square', midiHz(n), at, d, 0.4); at += d; }
 });
 
 render();

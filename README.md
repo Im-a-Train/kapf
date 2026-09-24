@@ -18,6 +18,8 @@ Extras:
 - **Fest schütteln** (Handy) oder die Maus wild hin und her bewegen: alles fällt zusammen. «Ufruume» stellt es wieder hin.
 - **Übernachten:** Checkbox im Formular, im Admin als 🏕️ und im CSV als `sleepover`.
 - **Kalender:** Nach der Zusage gibt es «📅 In den Kalender!» (`/api/event.ics`, Zeiten in `calendar` in `config/event.js`).
+- **Spielplatz:** Drei ASCII-Minigames (`public/games.js`): Downhill (Ski, Bäumen ausweichen, Bier sammeln),
+  Zelt bauen (Stapelspiel) und Pong gegen Melu-Bot. Tastatur oder Knöpfe, Highscores im Browser.
 - **8-Bit-Musik:** Startet beim ersten Tipp/Klick, Knopf unten links schaltet sie aus (`public/music.js`, reines Web Audio).
 
 ## Starten
@@ -73,7 +75,7 @@ src/riddles.js       Rätsel-Auswahl und Antwortprüfung
 src/calendar.js      Kalenderdatei (.ics)
 src/auth.js          HMAC-signierte Tokens (Rätsel gelöst / Admin-Session)
 src/store.js         JSON-Datei-Speicher (austauschbar)
-public/              Anmeldeseite (Bad UI): app.js, anfahrt.js (Aafahrt), crew.js (Strichmännchen)
+public/              Anmeldeseite (Bad UI): app.js, anfahrt.js (Aafahrt), crew.js (Strichmännchen), games.js, music.js
 public/admin/        Admin-UI (Good UI)
 test/                API-Tests (node:test)
 ```

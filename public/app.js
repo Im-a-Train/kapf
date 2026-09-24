@@ -214,7 +214,7 @@ addEventListener('load', () => confetti(120));
 setInterval(() => document.visibilityState === 'visible' && confetti(10), 3000);
 document.addEventListener('click', (e) => {
   const b = e.target.closest('button, .radio, a');
-  if (!b) return;
+  if (!b || b.closest('.game-ctl')) return; // Game-Knöpfe ohne Konfetti, sonst sieht man nichts
   const r = b.getBoundingClientRect();
   const fromKeyboard = e.clientX === 0 && e.clientY === 0;
   confetti(25, fromKeyboard ? { x: r.left + r.width / 2, y: r.top } : { x: e.clientX, y: e.clientY });
