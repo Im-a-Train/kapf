@@ -8,15 +8,17 @@ Dazu gibt es ein kleines Admin-UI unter `/admin`.
 
 Extras:
 - **Aafahrt** (klappt hinter «WO» auf): Startort wählen (Bärn, Oberdiessbach, Herblige, Schüpbach,
-  frei eingeben oder Handy-Standort), dann SBB-Verbindungen zur Haltestelle «Röthenbach i.E., Fischbach»,
+  frei eingeben oder Handy-Standort), dann SBB-Verbindungen zur Postautohaltestelle Fischbach («Röthenbach i.E., Fischbach»),
   Auto-Route in Google Maps, swisstopo-Karte und ein GPX (Velo, z Fuess, Auto) zum Herunterladen.
-  Die Daten kommen direkt im Browser von [transport.opendata.ch](https://transport.opendata.ch)
-  (SBB-Fahrplan), [BRouter](https://brouter.de) (GPX) und [swisstopo](https://map.geo.admin.ch) (Karte).
+  Die Daten kommen direkt im Browser von der [Fahrplan-API von search.ch](https://search.ch/timetable/api/help)
+  (SBB-Fahrplan; bewusst nicht transport.opendata.ch, das teilt sich ein Tageskontingent mit allen Nutzern), [BRouter](https://brouter.de) (GPX) und [swisstopo](https://map.geo.admin.ch) (Karte).
   Der Server braucht dafür keinen Internetzugang.
 - **Crew:** Tim, Röbu, Chrigu & Melu klettern als Strichmännchen auf der Seite herum und fahren Velo,
   sitzen am PC oder fahren Ski (`public/crew.js`).
 - **Fest schütteln** (Handy) oder die Maus wild hin und her bewegen: alles fällt zusammen. «Ufruume» stellt es wieder hin.
 - **Übernachten:** Checkbox im Formular, im Admin als 🏕️ und im CSV als `sleepover`.
+- **Kalender:** Nach der Zusage gibt es «📅 In den Kalender!» (`/api/event.ics`, Zeiten in `calendar` in `config/event.js`).
+- **8-Bit-Musik:** Startet beim ersten Tipp/Klick, Knopf unten links schaltet sie aus (`public/music.js`, reines Web Audio).
 
 ## Starten
 
@@ -68,6 +70,7 @@ src/server.js        Einstiegspunkt (liest env, startet Server)
 src/app.js           Routen/API (öffentlich + Admin), statische Dateien
 src/registration.js  Validierung der Anmeldung + CSV-Export
 src/riddles.js       Rätsel-Auswahl und Antwortprüfung
+src/calendar.js      Kalenderdatei (.ics)
 src/auth.js          HMAC-signierte Tokens (Rätsel gelöst / Admin-Session)
 src/store.js         JSON-Datei-Speicher (austauschbar)
 public/              Anmeldeseite (Bad UI): app.js, anfahrt.js (Aafahrt), crew.js (Strichmännchen)
@@ -80,6 +83,7 @@ test/                API-Tests (node:test)
 | Methode | Pfad                              | Beschreibung                      |
 |---------|-----------------------------------|-----------------------------------|
 | GET     | `/api/event`                      | Event-Infos aus `config/event.js` |
+| GET     | `/api/event.ics`                  | Kalenderdatei zum Fest            |
 | GET     | `/api/riddle?not=<id>`            | Zufälliges Rätsel (ohne Antwort)  |
 | POST    | `/api/riddle/solve`               | `{id, answer}` → `{ok, token}`    |
 | POST    | `/api/registrations`              | Anmeldung (braucht `riddleToken`) |

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createAuth } from './auth.js';
 import { createRiddles } from './riddles.js';
 import { toCsv, validateRegistration } from './registration.js';
+import { toIcs } from './calendar.js';
 
 const PUBLIC_DIR = resolve(fileURLToPath(new URL('../public', import.meta.url)));
 const MIME = {
@@ -33,6 +34,14 @@ export function createApp({ event, riddles, store, secret, adminPassword }) {
 
   // --- Öffentlich -------------------------------------------------------
   route('GET', '/api/event', ({ res }) => json(res, 200, event));
+
+  route('GET', '/api/event.ics', ({ res }) => {
+    res.writeHead(200, {
+      'Content-Type': 'text/calendar; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="kapf-4x30.ics"',
+    });
+    res.end(toIcs(event));
+  });
 
   route('GET', '/api/riddle', ({ res, url }) => json(res, 200, riddleSet.random(url.searchParams.get('not'))));
 

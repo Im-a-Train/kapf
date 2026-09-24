@@ -1,8 +1,13 @@
 // Anfahrt: klappt hinter «WO» auf.
-// ÖV-Verbindungen von transport.opendata.ch (offizielle SBB-Fahrplandaten),
-// GPX-Routen von BRouter, Karte von swisstopo. Beide erlauben Aufrufe direkt aus dem Browser (CORS).
+// ÖV-Verbindungen von der Fahrplan-API von search.ch (SBB-Fahrplandaten),
+// GPX-Routen von BRouter, Karte von swisstopo. Alle erlauben Aufrufe direkt aus dem Browser (CORS).
+//
+// Warum search.ch und nicht transport.opendata.ch: transport.opendata.ch holt die Daten selbst
+// bei search.ch und teilt sich dort EIN Tageskontingent mit allen seinen Nutzern – ist es weg,
+// kommt für den Rest des Tages nur noch «Too many requests today». Direkt bei search.ch gilt
+// das Limit pro Besucher (IP), und so viele Abfragen macht hier niemand.
 const $ = (sel) => document.querySelector(sel);
-const TRANSPORT = 'https://transport.opendata.ch/v1';
+const TIMETABLE = 'https://search.ch/timetable/api';
 const BROUTER = 'https://brouter.de/brouter';
 
 let event = null;
@@ -75,9 +80,9 @@ async function setOtherOrigin() {
   const q = $('#origin-other').value.trim();
   if (q.length < 2) return;
   try {
-    const station = await findStation({ query: q });
+    const station = await findStation({ term: q });
     if (!station) return showOevMessage(`«${q}» kenne ich nicht. Ist das noch in der Schweiz?`);
-    setOrigin({ label: station.name, query: station.name, stationId: station.id, lat: station.coordinate.x, lon: station.coordinate.y });
+    setOrigin({ label: station.name, query: station.name, stationId: station.id, lat: station.lat, lon: station.lon });
   } catch {
     showOevMessage('Fahrplan gerade nicht erreichbar. Versuch es später nochmals.');
   }
@@ -90,7 +95,7 @@ $('#origin-geo').addEventListener('click', () => {
   navigator.geolocation.getCurrentPosition(async ({ coords }) => {
     for (const r of document.querySelectorAll('input[name="origin"]')) r.checked = false;
     $('#origin-other').hidden = true;
-    const station = await findStation({ x: coords.latitude, y: coords.longitude }).catch(() => null);
+    const station = await findStation({ latlon: `${coords.latitude},${coords.longitude}` }).catch(() => null);
     setOrigin({
       label: station ? `Mein Standort (bei ${station.name})` : 'Mein Standort',
       query: station?.name,
@@ -101,12 +106,15 @@ $('#origin-geo').addEventListener('click', () => {
   }, () => showOevMessage('Kein Standort. Dann halt von Hand auswählen.'), { timeout: 15000 });
 });
 
+// Haltestelle suchen, per Name ({ term }) oder Position ({ latlon: 'lat,lon' })
 async function findStation(params) {
-  const url = new URL(`${TRANSPORT}/locations`);
+  const url = new URL(`${TIMETABLE}/completion.json`);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-  url.searchParams.set('type', 'station');
-  const { stations = [] } = await (await fetch(url)).json();
-  return stations.find((s) => s.id && s.coordinate?.x);
+  url.searchParams.set('show_ids', '1');
+  url.searchParams.set('show_coordinates', '1');
+  const list = await (await fetch(url)).json();
+  const hit = (Array.isArray(list) ? list : []).find((s) => s.id && s.lat);
+  return hit && { id: hit.id, name: hit.label, lat: hit.lat, lon: hit.lon };
 }
 
 function setOrigin(o) {
@@ -134,30 +142,31 @@ function showOevMessage(text) {
   $('#oev-list').replaceChildren(li);
 }
 
-const hhmm = (iso) => iso?.slice(11, 16) ?? '';
-const minutes = (dur) => {
-  const [, d, h, m] = dur.match(/(\d+)d(\d+):(\d+)/) ?? [];
-  return Number(d) * 1440 + Number(h) * 60 + Number(m);
-};
+const hhmm = (t) => t?.slice(11, 16) ?? '';
 
 let loadSeq = 0;
 async function loadConnections() {
   await eventReady;
   updateSbbLink();
-  if (!origin?.query) return showOevMessage('Für diesen Ort finde ich keine Haltestelle.');
+  if (!origin?.query && !origin?.stationId) return showOevMessage('Für diesen Ort finde ich keine Haltestelle.');
   const seq = ++loadSeq;
   showOevMessage('Frage die SBB … 🚂');
-  const url = new URL(`${TRANSPORT}/connections`);
+  const [y, m, d] = event.date.split('-');
+  const url = new URL(`${TIMETABLE}/route.json`);
   url.searchParams.set('from', origin.stationId ?? origin.query);
   url.searchParams.set('to', event.stop.id);
-  url.searchParams.set('date', event.date);
+  url.searchParams.set('date', `${m}/${d}/${y}`);
   url.searchParams.set('time', event.arriveBy);
-  url.searchParams.set('isArrivalTime', '1');
-  url.searchParams.set('limit', '3');
+  url.searchParams.set('time_type', 'arrival');
+  // Die drei letzten Verbindungen, die VOR der Zeit ankommen (pre), keine danach (num)
+  url.searchParams.set('pre', '3');
+  url.searchParams.set('num', '0');
   try {
-    const { connections = [] } = await (await fetch(url)).json();
+    const data = await (await fetch(url)).json();
     if (seq !== loadSeq) return;
-    if (!connections.length) return showOevMessage('Keine Verbindung gefunden. Velo? 🚲');
+    const connections = data.connections ?? [];
+    if (data.url) $('#searchch-link').href = data.url;
+    if (!connections.length) return showOevMessage(data.messages?.[0] ?? 'Keine Verbindung gefunden. Velo? 🚲');
     // Späteste Verbindung zuerst – die, bei der man am längsten schlafen kann
     $('#oev-list').replaceChildren(...connections.reverse().map(renderConnection));
   } catch {
@@ -167,27 +176,31 @@ async function loadConnections() {
 
 function renderConnection(c) {
   const li = document.createElement('li');
-  const legs = c.sections.map((s) => {
+  const rides = c.legs.filter((l) => l.type && l.type !== 'walk');
+  const legs = c.legs.filter((l) => l.type).map((l) => {
     const span = document.createElement('span');
-    if (s.journey) {
-      span.className = 'leg';
-      span.textContent = `${s.journey.category}${s.journey.number ?? ''}`.replace(/^([A-Z]+)\1/, '$1');
-      span.title = `${hhmm(s.departure.departure)} ${s.departure.station.name} → ${hhmm(s.arrival.arrival)} ${s.arrival.station.name}`;
-    } else {
+    if (l.type === 'walk') {
       span.className = 'leg walk';
       span.textContent = '🚶';
-      span.title = 'z Fuess';
+      span.title = `z Fuess: ${l.name} → ${l.exit?.name ?? ''}`;
+    } else {
+      span.className = 'leg';
+      span.textContent = l.line ?? l['*G'] ?? l.type;
+      if (l.bgcolor) span.style.background = `#${l.bgcolor}`;
+      if (l.fgcolor) span.style.color = `#${l.fgcolor}`;
+      span.title = `${hhmm(l.departure)} ${l.name} → ${hhmm(l.exit?.arrival)} ${l.exit?.name ?? ''}`;
     }
     return span;
   });
   const times = document.createElement('strong');
-  times.textContent = `${hhmm(c.from.departure)} → ${hhmm(c.to.arrival)}`;
+  times.textContent = `${hhmm(c.departure)} → ${hhmm(c.arrival)}`;
   const meta = document.createElement('small');
-  const umst = c.transfers === 0 ? 'direkt' : `${c.transfers}× umsteigen`;
-  meta.textContent = ` ${minutes(c.duration)} min · ${umst}${c.from.platform ? ` · Gl. ${c.from.platform}` : ''}`;
+  const transfers = Math.max(0, rides.length - 1);
+  const track = rides[0]?.track ? ` · Gl. ${rides[0].track}` : '';
+  meta.textContent = ` ${Math.round(c.duration / 60)} min · ${transfers ? `${transfers}× umsteigen` : 'direkt'}${track}`;
   const legWrap = document.createElement('div');
   legWrap.className = 'legs';
-  legWrap.append(...legs, Object.assign(document.createElement('span'), { className: 'leg walk', textContent: '🚶 700 m', title: 'Haltestelle → Kapf' }));
+  legWrap.append(...legs, Object.assign(document.createElement('span'), { className: 'leg walk', textContent: '🚶 700 m', title: 'Haltestelle Fischbach → Kapf' }));
   li.append(times, meta, legWrap);
   return li;
 }

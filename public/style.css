@@ -505,3 +505,23 @@ body.collapsed { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .crew { display: none; }
 }
+
+/* 8-Bit-Musik-Knopf (music.js) */
+.music-btn {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 150;
+  font: 11px/1 "Press Start 2P", monospace;
+  padding: 10px 12px;
+  background: var(--black);
+  color: var(--yellow);
+  border: 3px solid var(--pink);
+  box-shadow: 4px 4px 0 var(--pink);
+  cursor: pointer;
+}
+.music-btn.on { animation: marqueebg 0.6s steps(2) infinite; }
+
+#done-cal { margin: 24px 0 8px; }
+#done-cal .btn { text-decoration: none; display: inline-block; }
+#done-cal small { font-family: "Special Elite", monospace; font-size: 14px; }

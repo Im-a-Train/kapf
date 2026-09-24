@@ -12,6 +12,8 @@ export const event = {
   // Anmeldeschluss (ISO-Datum) – danach nimmt die API keine Anmeldungen mehr an. null = offen.
   registrationDeadline: null,
   maxCompanions: 3,
+  // Für die Kalenderdatei (/api/event.ics), Ortszeit Schweiz
+  calendar: { start: '2027-05-22T16:00', end: '2027-05-23T02:00', url: 'https://kapf.24eranker.dedyn.io' },
 
   // Anfahrt. Koordinaten vom Kapf: 46°51.88922'N, 7°46.04185'E
   coords: { lat: 46.864820, lon: 7.767364 },

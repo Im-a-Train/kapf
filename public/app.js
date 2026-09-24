@@ -140,6 +140,7 @@ form.addEventListener('submit', async (e) => {
     $('#done-text').textContent = data.attending === 'yes'
       ? `${data.name}, du bist dabei! Wir sehen uns am ${event.dateLabel} im ${event.location}.`
       : `Schade, ${data.name}. Wir trinken eins auf dich.`;
+    $('#done-cal').hidden = data.attending !== 'yes';
     $('#done').scrollIntoView({ behavior: 'smooth' });
     confetti(300);
     [0.2, 0.5, 0.8].forEach((fx, i) => setTimeout(() => confetti(60, { x: innerWidth * fx, y: innerHeight * 0.6 }), i * 400));

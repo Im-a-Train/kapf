@@ -94,6 +94,17 @@ test('Event liefert Anfahrt (Koordinaten, Haltestelle, Startpunkte)', async () =
   assert.deepEqual(data.origins.map((o) => o.label), ['Bärn', 'Oberdiessbach', 'Herblige', 'Schüpbach']);
 });
 
+test('Kalenderdatei', async () => {
+  const res = await fetch(`${base}/api/event.ics`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /text\/calendar/);
+  const ics = await res.text();
+  assert.match(ics, /^BEGIN:VCALENDAR\r\n/);
+  assert.match(ics, /DTSTART;TZID=Europe\/Zurich:20270522T160000\r\n/);
+  assert.match(ics, /GEO:46\.86482;7\.767364/);
+  for (const line of ics.split('\r\n')) assert.ok(Buffer.byteLength(line) <= 75, line);
+});
+
 test('Statische Dateien & kein Path-Traversal', async () => {
   const res = await fetch(`${base}/`);
   assert.match(await res.text(), /Kapf/);

@@ -46,7 +46,7 @@
       <h2><span class="blink">▶</span> Aafahrt: Wie chunnsch i Kapf?</h2>
       <p class="small">
         📍 <strong id="coords-label">46°51.88922'N, 7°46.04185'E</strong> ·
-        Nächste Haltestelle: <strong id="stop-name">Röthenbach i.E., Fischbach</strong> (ca. 700 m z Fuess)
+        Postautohaltestelle Fischbach: <strong id="stop-name">Röthenbach i.E., Fischbach</strong> (Linie 271, ca. 700 m z Fuess)
       </p>
 
       <fieldset class="origins">
@@ -68,6 +68,7 @@
         <ul id="oev-list" class="conns"><li class="muted">Zersch säge, vo wo chunnsch. ☝️</li></ul>
         <p class="row">
           <a id="sbb-link" class="btn btn-go small-btn" href="https://www.sbb.ch" target="_blank" rel="noopener">Fahrplan uf sbb.ch ↗</a>
+          <a id="searchch-link" class="btn btn-meh" href="https://search.ch/fahrplan/" target="_blank" rel="noopener">search.ch ↗</a>
         </p>
       </div>
 
@@ -94,7 +95,7 @@
 
       <iframe id="map" class="map" title="Karte vom Kapf" loading="lazy"
         src="https://map.geo.admin.ch/#/embed?lang=de&amp;center=2625065,1190462&amp;z=7&amp;bgLayer=ch.swisstopo.pixelkarte-farbe&amp;crosshair=marker,2625065,1190462"></iframe>
-      <p class="small">Karte: © <a href="https://www.swisstopo.admin.ch" target="_blank" rel="noopener">swisstopo</a> · Fahrplan: <a href="https://transport.opendata.ch" target="_blank" rel="noopener">transport.opendata.ch</a> · Routen: <a href="https://brouter.de" target="_blank" rel="noopener">BRouter</a></p>
+      <p class="small">Karte: © <a href="https://www.swisstopo.admin.ch" target="_blank" rel="noopener">swisstopo</a> · Fahrplan: <a href="https://search.ch/timetable/api/help" target="_blank" rel="noopener">search.ch</a> · Routen: <a href="https://brouter.de" target="_blank" rel="noopener">BRouter</a></p>
     </section>
 
     <!-- Schritt 1: Rätsel -->
@@ -165,6 +166,10 @@
     <section id="done" class="box" hidden>
       <h2>🎉 Merci! 🎉</h2>
       <p id="done-text"></p>
+      <p id="done-cal" hidden>
+        <a class="btn btn-go" href="/api/event.ics" download="kapf-4x30.ics">📅 In den Kalender!</a>
+        <br><small>Damit du es nicht vergisst. Wir kennen dich.</small>
+      </p>
       <pre class="ascii small-ascii">
    ( (  ( (
     ) )  ) )
@@ -181,9 +186,11 @@
 
   <div id="crew" class="crew" aria-hidden="true"></div>
   <button type="button" id="tidy-btn" class="btn btn-go tidy" hidden>🧹 Ufruume!</button>
+  <button type="button" id="music-btn" class="music-btn" aria-pressed="false" title="8-Bit-Musik">🔇 8-BIT</button>
 
   <script src="/app.js" type="module"></script>
   <script src="/anfahrt.js" type="module"></script>
   <script src="/crew.js" type="module"></script>
+  <script src="/music.js" type="module"></script>
 </body>
 </html>
