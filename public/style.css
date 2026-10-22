@@ -21,7 +21,11 @@ body {
   font-size: 18px;
   line-height: 1.4;
   overflow-x: hidden;
+  overflow-x: clip;
 }
+/* Konfetti und Crew laufen über den Rand: ohne clip auf <html> lässt sich die Seite auf dem
+   Handy seitlich verschieben, und fixierte Elemente (8-Bit-Knopf) zittern mit. */
+html { overflow-x: clip; }
 
 a { color: var(--blue); }
 
@@ -519,6 +523,7 @@ body.collapsed { overflow: hidden; }
   border: 3px solid var(--pink);
   box-shadow: 4px 4px 0 var(--pink);
   cursor: pointer;
+  transform: translateZ(0); /* eigene Ebene, damit er beim Scrollen auf dem Handy nicht zittert */
 }
 .music-btn.on { animation: marqueebg 0.6s steps(2) infinite; }
 
