@@ -6,13 +6,14 @@ import { join } from 'node:path';
 
 import { createApp } from '../src/app.js';
 import { createJsonStore } from '../src/store.js';
+import { createPlanningStore } from '../src/planning.js';
 import { event, riddles } from '../config/event.js';
 
 let server, base, dir;
 
 before(async () => {
   dir = await mkdtemp(join(tmpdir(), 'kapf-'));
-  server = createApp({ event, riddles, store: createJsonStore(join(dir, 'r.json')), adminPassword: 'geheim' });
+  server = createApp({ event, riddles, store: createJsonStore(join(dir, 'r.json')), planning: createPlanningStore(join(dir, 'p.json')), adminPassword: 'geheim' });
   await new Promise((r) => server.listen(0, r));
   base = `http://localhost:${server.address().port}`;
 });
@@ -88,4 +89,35 @@ test('Statische Dateien & kein Path-Traversal', async () => {
   assert.match(await res.text(), /Kapf/);
   const trav = await fetch(`${base}/..%2f..%2fpackage.json`);
   assert.notEqual(trav.status, 200);
+});
+
+test('Planung: nur Admin, Startstand, Speichern mit Versionsprüfung', async () => {
+  assert.equal((await call('/api/admin/planning')).status, 401);
+  assert.equal((await call('/api/admin/planning', { method: 'PUT', body: {} })).status, 401);
+
+  const login = await call('/api/admin/login', { method: 'POST', body: { password: 'geheim' } });
+  const cookie = login.res.headers.get('set-cookie').split(';')[0];
+
+  const start = await call('/api/admin/planning', { cookie });
+  assert.equal(start.status, 200);
+  assert.equal(start.data.version, 0);
+  assert.equal(start.data.state.budget, 4000);
+  assert.ok(start.data.state.tasks.length > 0);
+
+  const state = { ...start.data.state, budget: 4500 };
+  state.tasks[0].done = true;
+  state.tasks.push({ id: 'x1', owner: 'nobody', text: 'wird verworfen' });
+  const saved = await call('/api/admin/planning', { method: 'PUT', cookie, body: { version: 0, state } });
+  assert.equal(saved.status, 200);
+  assert.equal(saved.data.version, 1);
+  assert.equal(saved.data.state.budget, 4500);
+  assert.equal(saved.data.state.tasks[0].done, true);
+  assert.ok(!saved.data.state.tasks.some((t) => t.id === 'x1'));
+
+  const stale = await call('/api/admin/planning', { method: 'PUT', cookie, body: { version: 0, state } });
+  assert.equal(stale.status, 409);
+  assert.equal(stale.data.version, 1);
+
+  const bad = await call('/api/admin/planning', { method: 'PUT', cookie, body: { version: 1, state: { tasks: 'x' } } });
+  assert.equal(bad.status, 400);
 });
