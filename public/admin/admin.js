@@ -16,6 +16,7 @@ function showLogin() {
   $('#login').hidden = false;
   $('#dashboard').hidden = true;
   $('#logout').hidden = true;
+  $('#planning-link').hidden = true;
 }
 
 async function load() {
@@ -25,6 +26,7 @@ async function load() {
   $('#login').hidden = true;
   $('#dashboard').hidden = false;
   $('#logout').hidden = false;
+  $('#planning-link').hidden = false;
   render();
 }
 

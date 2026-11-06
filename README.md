@@ -4,7 +4,8 @@ Anmeldeseite für den 30. Geburtstag von **Tim, Röbu, Chrigu & Melu**
 📍 Kapf · 📅 Samstag, 22.05.27
 
 Bad UI mit Absicht (inspiriert von [glunz.ch](https://glunz.ch)). Anmelden kann nur, wer ein Rätsel löst.
-Dazu gibt es ein kleines Admin-UI unter `/admin`.
+Dazu gibt es ein kleines Admin-UI unter `/admin` und die Planung der vier Gastgeber unter `/admin/planung/`
+(Aufgaben, Budget, Abrechnung; nur mit Admin-Login).
 
 Extras:
 - **Aafahrt** (klappt hinter «WO» auf): Startort wählen (Bärn, Oberdiessbach, Herblige, Schüpbach,
@@ -40,6 +41,7 @@ npm test
 | `SECRET`         | zufällig beim Start       | Schlüssel für die Tokens. Setzen, damit Logins einen Neustart überleben. |
 | `PORT`           | `3000`                    | HTTP-Port                                                                |
 | `DATA_FILE`      | `data/registrations.json` | Hier werden die Anmeldungen gespeichert                                  |
+| `PLANNING_FILE`  | `planning.json` neben `DATA_FILE` | Stand der Planung (im Docker-Volume `/data/planning.json`)       |
 
 ### Deployment (Selfhosting mit Docker Compose)
 
@@ -75,8 +77,10 @@ src/riddles.js       Rätsel-Auswahl und Antwortprüfung
 src/calendar.js      Kalenderdatei (.ics)
 src/auth.js          HMAC-signierte Tokens (Rätsel gelöst / Admin-Session)
 src/store.js         JSON-Datei-Speicher (austauschbar)
+src/planning.js      Planung: Startstand, Validierung, Speicher mit Versionsprüfung
 public/              Anmeldeseite (Bad UI): app.js, anfahrt.js (Aafahrt), crew.js (Strichmännchen), games.js, music.js
 public/admin/        Admin-UI (Good UI)
+public/admin/planung/ Planung der Gastgeber (aus dem Claude-Artifact übernommen)
 test/                API-Tests (node:test)
 ```
 
@@ -94,6 +98,8 @@ test/                API-Tests (node:test)
 | GET     | `/api/admin/registrations.csv`    | CSV-Export (Excel-kompatibel)     |
 | PATCH   | `/api/admin/registrations/:id`    | Bearbeiten (inkl. interner Notiz) |
 | DELETE  | `/api/admin/registrations/:id`    | Löschen                           |
+| GET     | `/api/admin/planning`             | Planung `{version, updatedAt, state}` |
+| PUT     | `/api/admin/planning`             | `{version, state}` speichern, 409 bei Konflikt |
 
 ## Erweitern
 

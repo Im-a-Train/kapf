@@ -20,7 +20,7 @@ const MIME = {
   '.gif': 'image/gif',
 };
 
-export function createApp({ event, riddles, store, secret, adminPassword }) {
+export function createApp({ event, riddles, store, planning, secret, adminPassword }) {
   const auth = createAuth({ secret, adminPassword });
   const riddleSet = createRiddles(riddles);
   const routes = [];
@@ -106,6 +106,17 @@ export function createApp({ event, riddles, store, secret, adminPassword }) {
     if (!(await store.remove(params.id))) return json(res, 404, { error: 'Nicht gefunden' });
     return json(res, 200, { ok: true });
   }));
+
+  // --- Planung (nur Admin) ---------------------------------------------
+  if (planning) {
+    route('GET', '/api/admin/planning', requireAdmin(async ({ res }) => json(res, 200, await planning.get())));
+
+    route('PUT', '/api/admin/planning', requireAdmin(async ({ req, res }) => {
+      const input = await body(req, 500_000);
+      const result = await planning.save(input.state, input.version);
+      return json(res, result.conflict ? 409 : 200, result.doc);
+    }));
+  }
 
   // --- Handler ----------------------------------------------------------
   return createServer(async (req, res) => {
