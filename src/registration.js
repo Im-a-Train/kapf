@@ -1,5 +1,7 @@
 // Validierung einer Anmeldung. Neues Feld? Hier ergänzen + im Formular einbauen.
-export function validateRegistration(input, { maxCompanions }) {
+export const SPONTAN = 'spontan';
+
+export function validateRegistration(input, { maxCompanions, plan = [] }, { requireParts = false } = {}) {
   const errors = [];
   const str = (v, max) => String(v ?? '').trim().slice(0, max);
 
@@ -11,6 +13,7 @@ export function validateRegistration(input, { maxCompanions }) {
     companionNames: str(input.companionNames, 300),
     diet: str(input.diet, 300),
     sleepover: ['yes', 'on', 'true', true].includes(input.sleepover) ? 'yes' : 'no',
+    parts: parseParts(input.parts, plan),
     message: str(input.message, 1000),
   };
 
@@ -23,16 +26,26 @@ export function validateRegistration(input, { maxCompanions }) {
   if (data.attending === 'no') {
     data.companions = 0;
     data.sleepover = 'no';
+    data.parts = [];
+  } else if (requireParts && !data.parts.length) {
+    errors.push('Wenn chunnsch? Wenigstens es Chäschtli abhäkle.');
   }
 
   return { data, errors };
 }
 
-export const CSV_COLUMNS = ['createdAt', 'name', 'email', 'attending', 'companions', 'companionNames', 'sleepover', 'diet', 'message', 'note'];
+// Zeitfenster: Checkboxen aus event.plan oder «spontan». Spontan schliesst die anderen aus.
+function parseParts(value, plan) {
+  const list = (Array.isArray(value) ? value : String(value ?? '').split(/[,;]/)).map((v) => String(v).trim());
+  if (list.includes(SPONTAN)) return [SPONTAN];
+  return plan.map((p) => p.id).filter((id) => list.includes(id));
+}
+
+export const CSV_COLUMNS = ['createdAt', 'name', 'email', 'attending', 'companions', 'companionNames', 'parts', 'sleepover', 'diet', 'message', 'note'];
 
 export function toCsv(rows) {
   const esc = (v) => {
-    const s = String(v ?? '');
+    const s = Array.isArray(v) ? v.join(', ') : String(v ?? '');
     // Formel-Injection in Excel verhindern
     const safe = /^[=+\-@]/.test(s) ? `'${s}` : s;
     return `"${safe.replace(/"/g, '""')}"`;

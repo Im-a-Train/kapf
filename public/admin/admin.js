@@ -11,6 +11,10 @@ const api = async (path, method = 'GET', body) => {
 };
 
 let registrations = [];
+let plan = [];
+api('/api/event').then(({ data }) => { plan = data.plan ?? []; render(); });
+const partsLabel = (parts = []) => (parts.includes('spontan') ? '🤷 sponti'
+  : plan.filter((p) => parts.includes(p.id)).map((p) => `${p.emoji} ${p.when}`).join(', '));
 
 function showLogin() {
   $('#login').hidden = false;
@@ -31,6 +35,7 @@ async function load() {
 }
 
 function render() {
+  if ($('#dashboard').hidden) return;
   const q = $('#search').value.toLowerCase();
   const filter = $('#filter').value;
   const list = registrations.filter((r) =>
@@ -45,6 +50,8 @@ function render() {
     ['Absagen', registrations.length - yes.length],
     ['Übernachten (Pers.)', yes.filter((r) => r.sleepover === 'yes').reduce((n, r) => n + 1 + (r.companions || 0), 0)],
     ['Mit Essenswunsch', yes.filter((r) => r.diet).length],
+    ...plan.map((p) => [`${p.emoji} ${p.when} (Pers.)`, yes.filter((r) => r.parts?.includes(p.id)).reduce((n, r) => n + 1 + (r.companions || 0), 0)]),
+    ['🤷 Sponti (Pers.)', yes.filter((r) => r.parts?.includes('spontan')).reduce((n, r) => n + 1 + (r.companions || 0), 0)],
   ];
   $('#stats').replaceChildren(...stats.map(([label, n]) => el('div', { class: 'stat' }, el('b', {}, n), label)));
 
@@ -53,6 +60,7 @@ function render() {
     el('td', {}, el('span', { class: `badge ${r.attending}` }, r.attending === 'yes' ? 'Ja' : 'Nein')),
     el('td', {}, r.companions || ''),
     el('td', { class: 'wrap' }, r.companionNames),
+    el('td', { class: 'wrap' }, partsLabel(r.parts)),
     el('td', {}, r.sleepover === 'yes' ? '🏕️' : ''),
     el('td', { class: 'wrap' }, r.diet),
     el('td', { class: 'wrap' }, r.message),

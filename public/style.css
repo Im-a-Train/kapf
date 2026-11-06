@@ -209,9 +209,6 @@ footer { text-align: center; padding: 40px 16px; font-size: 13px; font-family: "
 .sneaky { color: var(--yellow); text-decoration: none; }
 .sneaky:hover { color: var(--black); }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-}
 
 /* =====================================================================
    Runde 2 (Feedback der Crew): mehr Schriften, mehr Bewegung
@@ -383,11 +380,6 @@ body.shaken main, body.shaken header { animation: quake 0.6s; }
   50%      { transform: translate(-8px, 4px) rotate(-2deg); }
 }
 
-/* Wer weniger Bewegung will, bekommt sie auch (steht am Schluss, damit es gewinnt) */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-  .floaters { display: none; }
-}
 
 /* =====================================================================
    Runde 3: Anfahrt, Übernachten, Crew, Zusammenfallen
@@ -506,9 +498,6 @@ body.collapsed { overflow: hidden; }
   font-size: 34px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .crew { display: none; }
-}
 
 /* 8-Bit-Musik-Knopf (music.js) */
 .music-btn {
@@ -557,3 +546,141 @@ body.collapsed { overflow: hidden; }
 .game-ctl .btn-go { font-size: 20px; }
 .game-ctl .arrows { display: flex; gap: 10px; }
 .game-ctl .arrows:not(:has(button:not([hidden]))) { display: none; }
+
+/* =====================================================================
+   Runde 4: Grober Plan, Party-Kachel, Party-Modus
+   ===================================================================== */
+
+/* Grober Plan */
+.plan-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+.plan-item {
+  border: 4px solid var(--black);
+  background: var(--yellow);
+  padding: 10px 12px;
+  box-shadow: 5px 5px 0 var(--pink);
+  animation: bob 3s ease-in-out infinite;
+}
+.plan-item:nth-child(2) { background: var(--green); animation-delay: -0.8s; }
+.plan-item:nth-child(3) { background: #ff9e80; animation-delay: -1.6s; }
+.plan-item:nth-child(4) { background: var(--black); color: var(--yellow); box-shadow: 5px 5px 0 var(--green); animation-delay: -2.4s; }
+.plan-emoji { display: block; font-size: 34px; line-height: 1; }
+.plan-when { display: block; font: 11px/1.6 "Press Start 2P", monospace; margin-top: 6px; }
+.plan-what { display: block; font-family: "Permanent Marker", cursive; font-size: 22px; font-weight: normal; }
+
+/* Checkboxen «Wenn bisch derbii?» */
+.parts .check { display: block; margin: 8px 0; font-weight: normal; }
+.parts .check input { transform: scale(1.6); margin-right: 10px; accent-color: var(--pink); }
+.parts .sponti { border-top: 2px dotted var(--black); padding-top: 8px; font-style: italic; }
+
+/* Party-Kachel (party-scene.js) */
+.scene-wrap { position: relative; }
+.scene-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 4px solid var(--black);
+  box-shadow: 6px 6px 0 var(--pink);
+  background: #cfeeff;
+  font-family: "Press Start 2P", monospace;
+}
+.scene-phase {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  margin: 0;
+  font: 11px/1.4 "Press Start 2P", monospace;
+  background: var(--yellow);
+  border: 2px solid var(--black);
+  padding: 4px 6px;
+}
+.scene-phase:empty { display: none; }
+.scene-count { font-family: "Bangers", cursive; font-size: 24px; letter-spacing: 1px; margin: 14px 0 4px; }
+.scene-svg .sign { font-family: "Press Start 2P", monospace; font-size: 6px; }
+.scene-svg .sun { fill: #ffe14d; transition: cx 2s, cy 2s, fill 2s; }
+.scene-svg[data-phase="abend"] .sun { fill: #ff7043; }
+.scene-svg[data-phase="nacht"] .sun { fill: #f5f3ce; }
+.scene-svg stop, .scene-svg .night { transition: stop-color 2s, opacity 2s; }
+.scene-svg .stars, .scene-svg .lights .bulb, .scene-svg .disco { opacity: 0; transition: opacity 2s; }
+.scene-svg[data-phase="abend"] .lights .bulb { opacity: 0.8; }
+.scene-svg[data-phase="nacht"] .stars,
+.scene-svg[data-phase="nacht"] .lights .bulb,
+.scene-svg[data-phase="nacht"] .disco { opacity: 1; }
+.scene-svg[data-phase="nacht"] .clouds { opacity: 0.25; }
+.scene-svg .windows rect { transition: fill 2s; }
+.scene-svg[data-phase="abend"] .windows rect,
+.scene-svg[data-phase="nacht"] .windows rect { fill: #ffd54f; }
+.scene-svg .fire-glow { opacity: 0.4; }
+.scene-svg[data-phase="nacht"] .fire-glow { opacity: 1; }
+
+/* Männli */
+.scene-svg .p { cursor: help; }
+.scene-svg .p .leg, .scene-svg .p .arm { stroke: #000; stroke-width: 1.6; stroke-linecap: round; fill: none; }
+.scene-svg .p circle { stroke: #000; stroke-width: 1.2; }
+.scene-svg .p.away { display: none; }
+.scene-svg .p .lbl {
+  font-size: 6px;
+  fill: #000;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 2px;
+  opacity: 0;
+  pointer-events: none;
+}
+.scene-svg .p.host .lbl, .scene-svg .p.me .lbl, .scene-svg .p:hover .lbl { opacity: 1; }
+.scene-svg .p.me .lbl { fill: var(--pink); }
+.scene-svg .p.flip .lbl { transform: scaleX(-1); }
+.scene-svg .p .leg, .scene-svg .p .arm { transform-box: view-box; }
+.scene-svg .p .l1, .scene-svg .p .l2 { transform-origin: 0 -9px; }
+.scene-svg .p .a1, .scene-svg .p .a2 { transform-origin: 0 -17px; }
+.scene-svg .p.walk .l1 { animation: legswing 0.36s ease-in-out infinite alternate; }
+.scene-svg .p.walk .l2 { animation: legswing 0.36s ease-in-out infinite alternate-reverse; }
+@keyframes legswing { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
+.scene-svg .p.dance .body { animation: hopdance 0.42s ease-in-out infinite alternate; }
+.scene-svg .p.dance .a1 { transform: rotate(150deg); }
+.scene-svg .p.dance .a2 { transform: rotate(-150deg); }
+@keyframes hopdance { to { transform: translateY(-3px) rotate(6deg); } }
+.scene-svg .flame { transform-box: fill-box; transform-origin: 50% 100%; animation: flicker 0.3s ease-in-out infinite alternate; }
+.scene-svg .flame2 { animation-duration: 0.22s; }
+@keyframes flicker { to { transform: scale(1.12, 0.88) skewX(4deg); } }
+.scene-svg .bulb { animation: blink 1s steps(1) infinite; }
+.scene-svg .bulb.b1 { animation-delay: -0.33s; }
+.scene-svg .bulb.b2 { animation-delay: -0.66s; }
+.scene-svg .disco circle { transform-box: fill-box; transform-origin: center; animation: hue 2s linear infinite; }
+
+/* Party-Knopf */
+.party-btn {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 150;
+  font: 14px/1 "Press Start 2P", monospace;
+  padding: 12px 14px;
+  background: var(--pink);
+  color: var(--yellow);
+  text-shadow: 2px 2px 0 var(--black);
+  border: 4px solid var(--black);
+  box-shadow: 5px 5px 0 var(--black);
+  cursor: pointer;
+  transform: translateZ(0);
+}
+.party-btn:active { translate: 4px 4px; box-shadow: 1px 1px 0 var(--black); }
+html.party .party-btn { background: var(--black); color: var(--yellow); border-color: var(--pink); box-shadow: 5px 5px 0 var(--pink); font-size: 11px; }
+footer { padding-bottom: 80px; }
+
+/* Ohne Party-Modus steht alles still (steht am Schluss, damit es gewinnt).
+   Der Knopf ist die bewusste Einladung zur Bewegung, darum gilt das auch bei
+   «weniger Bewegung» im System: standardmässig ist es ruhig. */
+html:not(.party) *, html:not(.party) *::before, html:not(.party) *::after { animation: none !important; }
+html:not(.party) .floaters, html:not(.party) .crew { display: none; }
+html:not(.party) .marquee span { padding-left: 16px; }
+@media (max-width: 600px) {
+  .scene-phase { font-size: 8px; left: 6px; top: 6px; padding: 3px 4px; }
+  .party-btn { font-size: 11px; padding: 10px; }
+}

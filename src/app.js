@@ -59,10 +59,20 @@ export function createApp({ event, riddles, store, planning, secret, adminPasswo
     if (!auth.verifyRiddleToken(input.riddleToken)) {
       return json(res, 403, { code: 'RIDDLE', errors: ['Zuerst das Rätsel lösen, du Schlaumeier.'] });
     }
-    const { data, errors } = validateRegistration(input, event);
+    const { data, errors } = validateRegistration(input, event, { requireParts: true });
     if (errors.length) return json(res, 400, { errors });
     const created = await store.create({ ...data, note: '' });
     return json(res, 201, { id: created.id, name: created.name, attending: created.attending });
+  });
+
+  // Wer kommt? Für die Party-Kachel. Bewusst nur Vorname + Anzahl Begleitung,
+  // in der Reihenfolge der Anmeldung (so füllt sich die Party).
+  route('GET', '/api/party', async ({ res }) => {
+    const guests = (await store.list())
+      .filter((r) => r.attending === 'yes')
+      .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))
+      .map((r) => ({ name: firstName(r.name), plus: r.companions || 0 }));
+    return json(res, 200, { hosts: event.hosts, guests });
   });
 
   // --- Admin ------------------------------------------------------------
@@ -151,6 +161,10 @@ async function serveStatic(pathname, res) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('404 – Hier ist kein Kapf.');
   }
+}
+
+function firstName(name) {
+  return String(name ?? '').trim().split(/\s+/)[0].slice(0, 20) || '?';
 }
 
 function json(res, status, data) {

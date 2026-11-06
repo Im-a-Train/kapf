@@ -56,11 +56,20 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
   const bad = await call('/api/registrations', { method: 'POST', body: { riddleToken: solved.data.token, attending: 'yes' } });
   assert.equal(bad.status, 400);
 
-  const reg = await call('/api/registrations', {
+  const noParts = await call('/api/registrations', {
     method: 'POST',
     body: { riddleToken: solved.data.token, name: 'Heidi', attending: 'yes', companions: '2', diet: 'vegi', sleepover: 'on' },
   });
+  assert.equal(noParts.status, 400, 'ohne Zeitfenster geht es nicht');
+
+  const reg = await call('/api/registrations', {
+    method: 'POST',
+    body: { riddleToken: solved.data.token, name: 'Heidi Muster', attending: 'yes', companions: '5', diet: 'vegi', sleepover: 'on', parts: ['nacht', 'abend', 'quatsch'] },
+  });
   assert.equal(reg.status, 201);
+
+  const party = await call('/api/party');
+  assert.deepEqual(party.data.guests, [{ name: 'Heidi', plus: 5 }], 'nur Vorname und Begleitung');
 
   assert.equal((await call('/api/admin/registrations')).status, 401);
   assert.equal((await call('/api/admin/login', { method: 'POST', body: { password: 'falsch' } })).status, 401);
@@ -70,7 +79,8 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
 
   const list = await call('/api/admin/registrations', { cookie });
   assert.equal(list.data.length, 1);
-  assert.equal(list.data[0].companions, 2);
+  assert.equal(list.data[0].companions, 5);
+  assert.deepEqual(list.data[0].parts, ['abend', 'nacht']);
   assert.equal(list.data[0].sleepover, 'yes');
 
   const patched = await call(`/api/admin/registrations/${reg.data.id}`, { method: 'PATCH', cookie, body: { attending: 'no', note: 'abgesagt per SMS' } });
@@ -78,6 +88,7 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
   assert.equal(patched.data.companions, 0);
   assert.equal(patched.data.sleepover, 'no');
   assert.equal(patched.data.note, 'abgesagt per SMS');
+  assert.equal((await call('/api/party')).data.guests.length, 0);
 
   const csv = await fetch(`${base}/api/admin/registrations.csv`, { headers: { Cookie: cookie } });
   const csvText = await csv.text();
@@ -142,4 +153,14 @@ test('Planung: nur Admin, Startstand, Speichern mit Versionsprüfung', async () 
 
   const bad = await call('/api/admin/planning', { method: 'PUT', cookie, body: { version: 1, state: { tasks: 'x' } } });
   assert.equal(bad.status, 400);
+});
+
+test('Spontan schliesst die anderen Zeitfenster aus, mehr als 5 Begleitpersonen nicht', async () => {
+  const { data: { token } } = await call('/api/riddle/solve', { method: 'POST', body: { id: 'alter', answer: '120' } });
+  const many = await call('/api/registrations', { method: 'POST', body: { riddleToken: token, name: 'Ueli', attending: 'yes', companions: 6, parts: ['spontan'] } });
+  assert.equal(many.status, 400);
+  const ok = await call('/api/registrations', { method: 'POST', body: { riddleToken: token, name: 'Ueli', attending: 'yes', parts: ['vormittag', 'spontan'] } });
+  assert.equal(ok.status, 201);
+  const no = await call('/api/registrations', { method: 'POST', body: { riddleToken: token, name: 'Vreni', attending: 'no' } });
+  assert.equal(no.status, 201, 'Absage braucht kein Zeitfenster');
 });

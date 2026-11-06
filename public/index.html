@@ -99,6 +99,24 @@
       <p class="small">Karte: © <a href="https://www.swisstopo.admin.ch" target="_blank" rel="noopener">swisstopo</a> · Fahrplan: <a href="https://search.ch/timetable/api/help" target="_blank" rel="noopener">search.ch</a> · Routen: <a href="https://brouter.de" target="_blank" rel="noopener">BRouter</a></p>
     </section>
 
+    <!-- Grober Plan (aus config/event.js, via app.js) -->
+    <section id="plan" class="box plan">
+      <h2><span class="blink">▶</span> De grob Plan</h2>
+      <ol id="plan-list" class="plan-list"></ol>
+      <p class="small">Chunnsch, wenn's dir passt. Bi der Aamäldig chasch aachrüzle, wenn de ungefähr da bisch.</p>
+    </section>
+
+    <!-- Die Party als Bild, füllt sich mit den Angemeldeten (party-scene.js) -->
+    <section id="scene" class="box scene">
+      <h2><span class="blink">▶</span> Wär isch scho uf em Chapf?</h2>
+      <div class="scene-wrap">
+        <svg id="scene-svg" class="scene-svg" viewBox="0 0 800 450" role="img" aria-labelledby="scene-count"></svg>
+        <p id="scene-phase" class="scene-phase" aria-hidden="true"></p>
+      </div>
+      <p id="scene-count" class="scene-count" role="status">D Party wird ufgstellt …</p>
+      <p class="small">Jedes Männli isch e aagmäldeti Person (inkl. Begleitig). Drück uf <strong>🎉 PARTY-MODUS</strong>, de chöme alli z loufe.</p>
+    </section>
+
     <!-- Schritt 1: Rätsel -->
     <section id="riddle" class="box">
       <h2><span class="blink">▶</span> Schritt 1: Beweise, dass du würdig bist</h2>
@@ -134,8 +152,14 @@
           <label class="radio"><input type="radio" name="attending" value="no"> Nein <small>(wir sind nicht beleidigt)</small> <small>(doch)</small></label>
         </fieldset>
 
+        <fieldset class="parts" id="parts-fieldset">
+          <legend>Wenn bisch derbii?</legend>
+          <div id="parts-list"></div>
+          <label class="check sponti"><input type="checkbox" name="parts" value="spontan"> 🤷 Weis no grad nid, luege de sponti</label>
+        </fieldset>
+
         <label id="companions-label">Wie viele Personen bringst du mit? <strong id="companions-out">0</strong>
-          <input name="companions" type="range" min="0" max="3" value="0" step="1">
+          <input name="companions" type="range" min="0" max="5" value="0" step="1">
           <small id="companions-quip">Solo. Mutig.</small>
         </label>
 
@@ -165,7 +189,7 @@
 
     <!-- Minigames (games.js) -->
     <section id="games" class="box games">
-      <h2><span class="blink">▶</span> Spielplatz: Wer langweilig het</h2>
+      <h2><span class="blink">▶</span> Wäm Längwilig isch</h2>
       <div class="tabs" role="tablist">
         <button type="button" class="tab game-tab" role="tab" data-game="downhill" aria-selected="true">⛷️ Downhill</button>
         <button type="button" class="tab game-tab" role="tab" data-game="tent" aria-selected="false">⛺ Zelt bauen</button>
@@ -208,9 +232,12 @@
 
   <div id="crew" class="crew" aria-hidden="true"></div>
   <button type="button" id="tidy-btn" class="btn btn-go tidy" hidden>🧹 Ufruume!</button>
+  <button type="button" id="party-btn" class="party-btn" aria-pressed="false">🎉 PARTY-MODUS</button>
   <button type="button" id="music-btn" class="music-btn" aria-pressed="false" title="8-Bit-Musik">🔇 8-BIT</button>
 
+  <script src="/party.js" type="module"></script>
   <script src="/app.js" type="module"></script>
+  <script src="/party-scene.js" type="module"></script>
   <script src="/anfahrt.js" type="module"></script>
   <script src="/crew.js" type="module"></script>
   <script src="/music.js" type="module"></script>

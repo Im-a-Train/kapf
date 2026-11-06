@@ -8,10 +8,18 @@ export const event = {
   location: 'Kapf',
   date: '2027-05-22',
   dateLabel: 'Samstag, 22.05.27',
-  time: 'ab 16:00', // TODO: definitiv festlegen
+  time: 'vom Brunch bis id Nacht', // TODO: genaue Zeiten festlegen
   // Anmeldeschluss (ISO-Datum) – danach nimmt die API keine Anmeldungen mehr an. null = offen.
   registrationDeadline: null,
-  maxCompanions: 3,
+  maxCompanions: 5,
+  // Grober Plan (Kachel auf der Seite + Checkboxen bei der Anmeldung).
+  // `id` wird gespeichert – nicht mehr ändern, wenn schon Anmeldungen da sind.
+  plan: [
+    { id: 'vormittag', when: 'Vormittag', what: 'Brunch', emoji: '🥐' },
+    { id: 'nachmittag', when: 'Nachmittag', what: 'Spiel und Spass', emoji: '🎯' },
+    { id: 'abend', when: 'Abend', what: "Z'Nacht und plaudern", emoji: '🍖' },
+    { id: 'nacht', when: 'Nacht', what: 'Schwoofe und Fiire', emoji: '🔥' },
+  ],
   // Für die Kalenderdatei (/api/event.ics), Ortszeit Schweiz
   calendar: { start: '2027-05-22T16:00', end: '2027-05-23T02:00', url: 'https://kapf.24eranker.dedyn.io' },
 

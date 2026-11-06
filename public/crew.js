@@ -1,7 +1,9 @@
 // Die Crew: Tim, Röbu, Chrigu & Melu als Strichmännchen.
+// Nur im Party-Modus unterwegs.
 // Jede*r sucht sich ein Element aus, klettert daran hoch und macht oben etwas:
 // Velo fahren, am kleinen PC sitzen oder Ski fahren. Dann Sprung und nächstes Element.
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+import { isParty } from './party.js';
+
 const layer = document.querySelector('#crew');
 
 const CREW = [
@@ -100,7 +102,14 @@ class Guy {
     this.y = -100;
     this.flip = false;
     this.first = true;
+    this.dead = false;
     setTimeout(() => this.run(), 800 + i * 1700);
+  }
+
+  // Party vorbei: Männli verschwindet, laufende Bewegungen brechen ab
+  kill() {
+    this.dead = true;
+    this.el.remove();
   }
 
   pose(p) { this.el.dataset.pose = p; }
@@ -120,6 +129,7 @@ class Guy {
     const t0 = performance.now();
     await new Promise((done) => {
       const step = (now) => {
+        if (this.dead) { done(); return; }
         if (paused) { requestAnimationFrame(step); return; }
         const t = Math.min(1, (now - t0) / ms);
         const e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
@@ -132,8 +142,9 @@ class Guy {
   }
 
   async run() {
-    for (;;) {
-      await until(() => !paused && document.visibilityState === 'visible');
+    while (!this.dead) {
+      await until(() => this.dead || (!paused && document.visibilityState === 'visible'));
+      if (this.dead) return;
       const target = chooseTarget();
       if (!target) { await sleep(2000); continue; }
       busy.add(target);
@@ -145,6 +156,7 @@ class Guy {
       await sleep(rand(300, 1500));
     }
   }
+  // (Nach kill() läuft ein angefangener Besuch noch zu Ende, aber unsichtbar und ohne Bewegung.)
 
   async visit(target) {
     let r = docRect(target);
@@ -196,4 +208,11 @@ class Guy {
   }
 }
 
-if (!reduced && layer) CREW.forEach((c, i) => new Guy(c, i));
+let guys = [];
+addEventListener('kapf:party', ({ detail: on }) => {
+  if (!layer) return;
+  guys.forEach((g) => g.kill());
+  guys = on ? CREW.map((c, i) => new Guy(c, i)) : [];
+  if (!on) busy.clear();
+});
+if (isParty() && layer) guys = CREW.map((c, i) => new Guy(c, i));

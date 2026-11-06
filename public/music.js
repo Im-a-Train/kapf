@@ -1,6 +1,6 @@
 // 8-Bit-Hintergrundmusik, live mit Web Audio erzeugt (keine Audiodateien).
-// Browser spielen Ton erst nach einer Interaktion: die Musik startet beim ersten Tipp/Klick
-// irgendwo auf der Seite, der Knopf unten links schaltet sie aus und wieder ein.
+// Die Musik startet mit dem Party-Modus (party.js), der Knopf unten links schaltet sie
+// jederzeit aus und wieder ein.
 // Die Wahl merkt sich der Browser (localStorage).
 const btn = document.querySelector('#music-btn');
 const PREF = 'kapf-music';
@@ -198,15 +198,11 @@ btn.addEventListener('click', (e) => {
   if (playing) { stop(); pref.set('off'); } else { start(); pref.set('on'); }
 });
 
-// Erster Tipp/Klick irgendwo startet die Musik, ausser sie wurde ausgeschaltet
-const kick = (e) => {
-  if (e.target === btn) return;
-  removeEventListener('pointerdown', kick);
-  removeEventListener('keydown', kick);
-  if (pref.get() !== 'off') start();
-};
-addEventListener('pointerdown', kick);
-addEventListener('keydown', kick);
+// Party-Modus an = Musik an (ausser sie wurde mal ausgeschaltet), Party aus = Ruhe
+addEventListener('kapf:party', ({ detail: on }) => {
+  if (on && !playing && pref.get() !== 'off') start();
+  if (!on && playing) stop();
+});
 
 // Tab im Hintergrund: Pause
 document.addEventListener('visibilitychange', () => {
