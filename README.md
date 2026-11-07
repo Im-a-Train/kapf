@@ -91,6 +91,7 @@ test/                API-Tests (node:test)
 | GET     | `/api/event`                      | Event-Infos aus `config/event.js` |
 | GET     | `/api/event.ics`                  | Kalenderdatei zum Fest            |
 | GET     | `/api/riddle?not=<id>`            | Zufälliges Rätsel (ohne Antwort)  |
+| GET     | `/api/party`                      | Zusagen für die Party-Kachel (ohne Namen, nur Anzahl Begleitung) |
 | POST    | `/api/riddle/solve`               | `{id, answer}` → `{ok, token}`    |
 | POST    | `/api/registrations`              | Anmeldung (braucht `riddleToken`) |
 | POST    | `/api/admin/login`, `/logout`     | Admin-Session (Cookie)            |
@@ -106,6 +107,8 @@ test/                API-Tests (node:test)
 - **Neues Rätsel:** Eintrag in `riddles` in `config/event.js` (`id`, `question`, `hint`, `answers`).
 - **Neues Formularfeld:** Feld in `public/index.html` ergänzen, in `validateRegistration` (`src/registration.js`)
   aufnehmen und bei Bedarf in `CSV_COLUMNS` und der Admin-Tabelle (`public/admin/`) anzeigen.
+- **Grober Plan:** `plan` in `config/event.js` (Kachel + Checkboxen «Wenn bisch derbii?»). Die `id`s nicht ändern, sobald Anmeldungen da sind.
+- **Party-Modus:** Ohne Klick auf «🎉 PARTY-MODUS» steht alles still (`html:not(.party)` in `style.css`). JS-Animationen fragen `isParty()` aus `public/party.js` bzw. hören auf das Event `kapf:party`.
 - **Anmeldeschluss:** `registrationDeadline` in `config/event.js` setzen.
 - **Neue Seite** (z. B. Programm, Anfahrt): HTML-Datei in `public/` ablegen, sie wird automatisch ausgeliefert.
 - **Neue API-Route:** In `src/app.js` mit `route('GET', '/api/…', handler)` registrieren; Admin-Routen mit `requireAdmin(...)` umhüllen.

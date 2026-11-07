@@ -1,3 +1,5 @@
+import { isParty } from './party.js';
+
 const $ = (sel) => document.querySelector(sel);
 const api = async (path, opts = {}) => {
   const res = await fetch(path, {
@@ -13,7 +15,7 @@ const store = {
 };
 
 // ---------- Event-Infos ----------
-let event = { maxCompanions: 3, date: '2027-05-22' };
+let event = { maxCompanions: 5, date: '2027-05-22', plan: [] };
 api('/api/event').then(({ data }) => {
   event = { ...event, ...data };
   $('#title').textContent = event.title;
@@ -24,7 +26,31 @@ api('/api/event').then(({ data }) => {
   $('#location').textContent = event.location;
   $('#hosts').textContent = event.hosts.join(' · ');
   $('#signup-form').elements.companions.max = event.maxCompanions;
+  renderPlan();
 });
+
+// ---------- Grober Plan + Checkboxen «Wenn bisch derbii?» ----------
+function renderPlan() {
+  $('#plan-list').replaceChildren(...event.plan.map((p, i) => {
+    const li = document.createElement('li');
+    li.className = `plan-item tilt-${i % 2 ? 'r' : 'l'}`;
+    li.innerHTML = '<span class="plan-emoji"></span><span class="plan-when"></span><strong class="plan-what"></strong>';
+    li.querySelector('.plan-emoji').textContent = p.emoji;
+    li.querySelector('.plan-when').textContent = p.when;
+    li.querySelector('.plan-what').textContent = p.what;
+    return li;
+  }));
+  $('#parts-list').replaceChildren(...event.plan.map((p) => {
+    const label = document.createElement('label');
+    label.className = 'check';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.name = 'parts';
+    box.value = p.id;
+    label.append(box, ` ${p.emoji} ${p.when}: ${p.what}`);
+    return label;
+  }));
+}
 
 // ---------- Countdown ----------
 function tick() {
@@ -93,7 +119,7 @@ function unlockSignup() {
 // ---------- Formular ----------
 const form = $('#signup-form');
 const f = form.elements;
-const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Ganze Delegation?!'];
+const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Ganze Delegation?!', 'Ein Fussball-Team (Hallen).', 'Ein ganzer Car?! Wir brauchen mehr Bier.'];
 
 function syncCompanions() {
   const n = Number(f.companions.value);
@@ -107,8 +133,18 @@ form.addEventListener('change', () => {
   const no = f.attending.value === 'no';
   $('#companions-label').hidden = no;
   $('#sleepover-label').hidden = no;
+  $('#parts-fieldset').hidden = no;
   if (no) f.sleepover.checked = false;
   if (no) { f.companions.value = 0; syncCompanions(); }
+});
+
+// «Sponti» schliesst die festen Zeitfenster aus (und umgekehrt)
+form.addEventListener('change', (e) => {
+  if (e.target.name !== 'parts' || !e.target.checked) return;
+  const sponti = e.target.value === 'spontan';
+  for (const box of form.querySelectorAll('input[name="parts"]')) {
+    if (box !== e.target && (sponti || box.value === 'spontan')) box.checked = false;
+  }
 });
 
 // Der Knopf flieht ein paar Mal (nur mit Maus). Tastatur & Touch funktionieren immer.
@@ -129,7 +165,9 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const errs = $('#signup-errors');
   errs.innerHTML = '';
-  const body = Object.fromEntries(new FormData(form));
+  const fd = new FormData(form);
+  const body = Object.fromEntries(fd);
+  body.parts = fd.getAll('parts');
   body.riddleToken = store.get('riddleToken');
   btn.disabled = true;
   const { status, data } = await api('/api/registrations', { method: 'POST', body });
@@ -141,6 +179,10 @@ form.addEventListener('submit', async (e) => {
       ? `${data.name}, du bist dabei! Wir sehen uns am ${event.dateLabel} im ${event.location}.`
       : `Schade, ${data.name}. Wir trinken eins auf dich.`;
     $('#done-cal').hidden = data.attending !== 'yes';
+    $('#done-love').hidden = data.attending !== 'yes';
+    if (data.attending === 'yes') {
+      dispatchEvent(new CustomEvent('kapf:registered', { detail: { name: body.name, plus: Number(body.companions) || 0 } }));
+    }
     $('#done').scrollIntoView({ behavior: 'smooth' });
     confetti(300);
     [0.2, 0.5, 0.8].forEach((fx, i) => setTimeout(() => confetti(60, { x: innerWidth * fx, y: innerHeight * 0.6 }), i * 400));
@@ -159,8 +201,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// ---------- Konfetti ----------
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// ---------- Konfetti (nur im Party-Modus) ----------
 const EMOJI = ['🎉', '🎂', '🍺', '🥳', '30', '🎈', '🍾', '✨', '🥨', '🎊'];
 const COLORS = ['#ff22ff', '#ffff00', '#00ff66', '#0000ff', '#ff3300', '#00e5ff', '#000'];
 const MAX_PIECES = 400;
@@ -168,7 +209,7 @@ let live = 0;
 
 // n Stück, entweder als Regen von oben oder als Explosion ab (x, y)
 function confetti(n = 80, { x, y, bits = EMOJI } = {}) {
-  if (reduced) return;
+  if (!isParty()) return;
   const burst = x !== undefined;
   for (let i = 0; i < n && live < MAX_PIECES; i++) {
     const s = document.createElement('span');
@@ -209,8 +250,13 @@ function confetti(n = 80, { x, y, bits = EMOJI } = {}) {
   }
 }
 
-// Konfetti überall: beim Laden, bei jedem Knopfdruck und als Dauer-Niesel
-addEventListener('load', () => confetti(120));
+// Konfetti überall: beim Einschalten der Party, bei jedem Knopfdruck und als Dauer-Niesel
+addEventListener('kapf:party', ({ detail: on }) => {
+  if (on) {
+    confetti(150);
+    confetti(80, { x: innerWidth / 2, y: innerHeight / 2 });
+  }
+});
 setInterval(() => document.visibilityState === 'visible' && confetti(10), 3000);
 document.addEventListener('click', (e) => {
   const b = e.target.closest('button, .radio, a');
@@ -244,9 +290,9 @@ splitTitle();
 
 // Glitzer hinter dem Mauszeiger
 let lastSparkle = 0;
-if (!reduced) {
+{
   addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse' || e.timeStamp - lastSparkle < 60) return;
+    if (!isParty() || e.pointerType !== 'mouse' || e.timeStamp - lastSparkle < 60) return;
     lastSparkle = e.timeStamp;
     const s = document.createElement('span');
     s.className = 'sparkle';
@@ -264,33 +310,40 @@ if (!reduced) {
 const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
 const clamp = (v) => Math.max(-1, Math.min(1, v));
 
-if (!reduced) {
+{
   addEventListener('deviceorientation', (e) => {
-    if (e.gamma == null) return;
+    if (!isParty() || e.gamma == null) return;
     tilt.tx = clamp(e.gamma / 35);
     tilt.ty = clamp((e.beta - 45) / 35); // normale Haltung ≈ 45°
   });
   addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse') return;
+    if (!isParty() || e.pointerType !== 'mouse') return;
     tilt.tx = clamp((e.clientX / innerWidth - 0.5) * 1.2);
     tilt.ty = clamp((e.clientY / innerHeight - 0.5) * 1.2);
   });
 
   const root = document.documentElement;
-  (function loop() {
+  const loop = () => {
+    if (!isParty()) {
+      Object.assign(tilt, { x: 0, y: 0, tx: 0, ty: 0 });
+      root.style.setProperty('--tx', 0);
+      root.style.setProperty('--ty', 0);
+      return;
+    }
     tilt.x += (tilt.tx - tilt.x) * 0.12;
     tilt.y += (tilt.ty - tilt.y) * 0.12;
     root.style.setProperty('--tx', tilt.x.toFixed(3));
     root.style.setProperty('--ty', tilt.y.toFixed(3));
     requestAnimationFrame(loop);
-  })();
+  };
+  addEventListener('kapf:party', ({ detail: on }) => on && requestAnimationFrame(loop));
 
   let lastShake = 0;
   let last = null;
   const hard = [];
   addEventListener('devicemotion', (e) => {
     const a = e.accelerationIncludingGravity;
-    if (!a || a.x == null) return;
+    if (!isParty() || !a || a.x == null) return;
     if (last) {
       const delta = Math.abs(a.x - last.x) + Math.abs(a.y - last.y) + Math.abs(a.z - last.z);
       if (delta > 30 && e.timeStamp - lastShake > 1200) {
@@ -311,14 +364,7 @@ if (!reduced) {
     }
     last = { x: a.x, y: a.y, z: a.z };
   });
-
-  // iOS will eine Erlaubnis, und zwar nach einem Tap
-  const askMotion = () => {
-    for (const E of [globalThis.DeviceOrientationEvent, globalThis.DeviceMotionEvent]) {
-      if (typeof E?.requestPermission === 'function') E.requestPermission().catch(() => {});
-    }
-  };
-  addEventListener('touchend', askMotion, { once: true });
+  // iOS-Erlaubnis für die Sensoren holt party.js beim Tap auf den Party-Knopf
 }
 
 // ---------- Fest schütteln = alles fällt zusammen ----------
@@ -328,7 +374,7 @@ const FALLING = 'header > *, .fact, .box:not([hidden]) > :not(form), .box:not([h
 let fallen = null;
 
 function collapse() {
-  if (fallen || reduced) return;
+  if (fallen || !isParty()) return;
   dispatchEvent(new Event('kapf:collapse'));
   navigator.vibrate?.([100, 50, 200]);
   const floor = innerHeight;
@@ -377,12 +423,22 @@ function tidy() {
 }
 $('#tidy-btn').addEventListener('click', tidy);
 
+// Party aus: alles sofort wieder an seinen Platz
+addEventListener('kapf:party', ({ detail: on }) => {
+  if (on || !fallen) return;
+  for (const a of fallen) a.cancel();
+  fallen = null;
+  $('#tidy-btn').hidden = true;
+  document.body.classList.remove('collapsed');
+  dispatchEvent(new Event('kapf:tidy'));
+});
+
 // Desktop: Maus schnell hin und her schütteln
 {
   let dir = 0;
   const flips = [];
   addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse' || Math.abs(e.movementX) < 25) return;
+    if (!isParty() || e.pointerType !== 'mouse' || Math.abs(e.movementX) < 25) return;
     const d = Math.sign(e.movementX);
     if (d === dir) return;
     dir = d;
