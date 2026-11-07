@@ -609,10 +609,16 @@ body.collapsed { overflow: hidden; }
 .scene-svg[data-phase="nacht"] .sun { fill: #f5f3ce; }
 .scene-svg stop, .scene-svg .night { transition: stop-color 2s, opacity 2s; }
 .scene-svg .stars, .scene-svg .lights .bulb, .scene-svg .disco { opacity: 0; transition: opacity 2s; }
+html.party .scene-svg .disco { opacity: 1; }
+.scene-svg .disco .rays { opacity: 0.18; mix-blend-mode: screen; transition: opacity 2s; transform-origin: 0 0; animation: spin 7s linear infinite; }
+.scene-svg[data-phase="abend"] .disco .rays { opacity: 0.3; }
+.scene-svg[data-phase="nacht"] .disco .rays { opacity: 0.45; }
+.scene-svg .disco .facets { animation: discospin 0.9s linear infinite; }
+@keyframes discospin { to { transform: translateX(-6px); } }
+.scene-svg .disco .glint { animation: blink 0.6s steps(1) infinite; }
 .scene-svg[data-phase="abend"] .lights .bulb { opacity: 0.8; }
 .scene-svg[data-phase="nacht"] .stars,
 .scene-svg[data-phase="nacht"] .lights .bulb,
-.scene-svg[data-phase="nacht"] .disco { opacity: 1; }
 .scene-svg[data-phase="nacht"] .clouds { opacity: 0.25; }
 .scene-svg .windows rect { transition: fill 2s; }
 .scene-svg[data-phase="abend"] .windows rect,
@@ -652,7 +658,6 @@ body.collapsed { overflow: hidden; }
 .scene-svg .bulb { animation: blink 1s steps(1) infinite; }
 .scene-svg .bulb.b1 { animation-delay: -0.33s; }
 .scene-svg .bulb.b2 { animation-delay: -0.66s; }
-.scene-svg .disco circle { transform-box: fill-box; transform-origin: center; animation: hue 2s linear infinite; }
 
 /* Party-Knopf */
 .party-btn {

@@ -210,10 +210,45 @@ function lights() {
       el('circle', { cx: qx, cy: qy + 2, r: 2.4, fill: colors[i % colors.length], class: `bulb b${i % 3}` }, g);
     }
   }
-  const ball = el('g', { transform: 'translate(395 300)', class: 'disco' }, g);
-  el('path', { d: 'M0 -26 V-8', stroke: '#222', 'stroke-width': 1 }, ball);
-  el('circle', { r: 7, fill: '#cfd8dc', stroke: '#455a64', 'stroke-width': 1 }, ball);
-  el('path', { d: 'M-7 0 H7 M0 -7 V7 M-5 -5 L5 5 M5 -5 L-5 5', stroke: '#90a4ae', 'stroke-width': 0.6 }, ball);
+  discoBall(g);
+}
+
+// Discokugel, hängt an der Dachkante. Drehen = Facetten wandern seitwärts durch den Kreis.
+function discoBall(parent) {
+  const R = 8;
+  const ball = el('g', { transform: 'translate(396 290)', class: 'disco' }, parent);
+  const defs = svg.querySelector('defs');
+  const clip = el('clipPath', { id: 'discoclip' }, defs);
+  el('circle', { r: R }, clip);
+
+  // Lichtstrahlen (drehen sich langsam)
+  const rays = el('g', { class: 'rays' }, ball);
+  const rayColors = ['#ff22ff', '#00e5ff', '#ffff00', '#00ff66', '#ff3300', '#ffffff'];
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const len = 70 + (i % 3) * 30;
+    const w = 0.06;
+    el('path', {
+      d: `M0 0 L${Math.cos(a - w) * len} ${Math.sin(a - w) * len} L${Math.cos(a + w) * len} ${Math.sin(a + w) * len} Z`,
+      fill: rayColors[i % rayColors.length],
+    }, rays);
+  }
+
+  el('path', { d: `M0 -18 V-${R}`, stroke: '#222', 'stroke-width': 1 }, ball);
+  el('circle', { r: R, fill: '#90a4ae' }, ball);
+  const facets = el('g', { 'clip-path': 'url(#discoclip)' }, ball);
+  const strip = el('g', { class: 'facets' }, facets);
+  const shades = ['#eceff1', '#b0bec5', '#ffffff', '#cfd8dc', '#78909c', '#e1f5fe'];
+  for (let col = 0; col < 12; col++) {
+    for (let row = 0; row < 6; row++) {
+      el('rect', {
+        x: -R + col * 3, y: -R + row * 3, width: 2.6, height: 2.6,
+        fill: shades[((col % 2) * 3 + row) % shades.length], // Muster wiederholt sich alle 6px → nahtlos drehen
+      }, strip);
+    }
+  }
+  el('circle', { r: R, fill: 'none', stroke: '#455a64', 'stroke-width': 0.8 }, ball);
+  el('circle', { cx: -3, cy: -3, r: 1.6, fill: '#fff', class: 'glint' }, ball);
 }
 
 // ---------- Leute ----------
@@ -425,6 +460,86 @@ function loop(now = performance.now()) {
   requestAnimationFrame(loop);
 }
 
+// ---------- Leise wummernde Bässe ----------
+// Wie wenn man die Party von weitem hört: dumpfe Kick auf jedem Schlag, Bass dazwischen,
+// alles durch einen Tiefpass. Läuft im Party-Modus, wird lauter gegen die Nacht hin
+// und ist nur hörbar, solange man das Wimmelbild sieht. Musik aus (🔇) = auch kein Bass.
+const bass = (() => {
+  const STEP = 0.25; // Sekunden pro Achtel, 120 BPM
+  const LINE = [45, 0, 45, 45, 43, 0, 43, 40]; // MIDI-Noten, 0 = Pause
+  const LEVEL = { vormittag: 0.25, nachmittag: 0.4, abend: 0.7, nacht: 1 };
+  let ctx = null;
+  let out = null;
+  let timer = null;
+  let next = 0;
+  let step = 0;
+  const musicOff = () => { try { return localStorage.getItem('kapf-music') === 'off'; } catch { return false; } };
+  const hz = (m) => 440 * 2 ** ((m - 69) / 12);
+
+  function kick(t) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.frequency.setValueAtTime(120, t);
+    o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+    g.gain.setValueAtTime(0.9, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    o.connect(g).connect(out);
+    o.start(t);
+    o.stop(t + 0.4);
+  }
+  function note(t, m) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.value = hz(m);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.35, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, t + STEP * 0.9);
+    o.connect(g).connect(out);
+    o.start(t);
+    o.stop(t + STEP);
+  }
+  function tick() {
+    const target = running && visible && !musicOff() ? 0.09 * (LEVEL[PHASES[phase].id] ?? 0.5) : 0;
+    out.gain.setTargetAtTime(target, ctx.currentTime, 0.4);
+    while (next < ctx.currentTime + 0.3) {
+      if (step % 2 === 0) kick(next);
+      const m = LINE[step % LINE.length];
+      if (m && step % 2 === 1) note(next, m);
+      else if (m && step % 4 === 2) note(next + STEP / 2, m);
+      next += STEP;
+      step++;
+    }
+  }
+  return {
+    start() {
+      // Läuft im Klick auf den Party-Knopf, also darf der Browser Ton machen
+      ctx ??= new (globalThis.AudioContext || globalThis.webkitAudioContext)();
+      if (!out) {
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.value = 160;
+        out = ctx.createGain();
+        out.gain.value = 0;
+        out.connect(lp).connect(ctx.destination);
+      }
+      ctx.resume();
+      next = ctx.currentTime + 0.1;
+      clearInterval(timer);
+      timer = setInterval(tick, 100);
+    },
+    stop() {
+      clearInterval(timer);
+      timer = null;
+      if (out) out.gain.setTargetAtTime(0, ctx.currentTime, 0.1);
+    },
+    pause(hidden) {
+      if (!ctx || !timer) return;
+      if (hidden) ctx.suspend(); else ctx.resume();
+    },
+  };
+})();
+
 // ---------- Start ----------
 async function load() {
   try {
@@ -445,7 +560,9 @@ if (svg) {
   drawLandscape();
   load();
 
-  addEventListener('kapf:party', ({ detail: on }) => (on ? startParty() : settle()));
+  addEventListener('kapf:party', ({ detail: on }) => {
+    if (on) { startParty(); bass.start(); } else { settle(); bass.stop(); }
+  });
 
   // Frisch angemeldet: du kommst dazu (im Party-Modus über die Strasse)
   addEventListener('kapf:registered', ({ detail }) => {
@@ -467,4 +584,5 @@ if (svg) {
 
   // Nur rechnen, wenn man die Kachel sieht
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(svg);
+  document.addEventListener('visibilitychange', () => bass.pause(document.visibilityState !== 'visible'));
 }
