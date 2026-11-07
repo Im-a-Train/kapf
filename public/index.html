@@ -64,7 +64,7 @@
       </div>
 
       <div class="tabpanel" data-panel="oev">
-        <p class="small">Verbindungen am <strong id="oev-date">22.05.27</strong>, Ankunft spätestens <strong id="oev-arrive">16:00</strong>:</p>
+        <p class="small">Verbindungen am <strong id="oev-date">22.05.27</strong>, Ankunft spätestens <input type="time" id="oev-arrive" class="arrive-input" value="16:00" step="300" aria-label="Ankunft spätestens">:</p>
         <ul id="oev-list" class="conns"><li class="muted">Zersch säge, vo wo chunnsch. ☝️</li></ul>
         <p class="row">
           <a id="sbb-link" class="btn btn-go small-btn" href="https://www.sbb.ch" target="_blank" rel="noopener">Fahrplan uf sbb.ch ↗</a>
@@ -103,17 +103,7 @@
     <section id="plan" class="box plan">
       <h2><span class="blink">▶</span> Dr grob Plan</h2>
       <ol id="plan-list" class="plan-list"></ol>
-      <p class="small">Chunnsch, wenn's dir passt. Bi der Aamäldig chasch aachrüzle, wenn de ungefähr da bisch.</p>
-    </section>
-
-    <!-- Die Party als Bild, füllt sich mit den Angemeldeten (party-scene.js) -->
-    <section id="scene" class="box scene">
-      <h2><span class="blink">▶</span> Wär isch scho uf em Chapf?</h2>
-      <div class="scene-wrap">
-        <svg id="scene-svg" class="scene-svg" viewBox="0 0 800 450" role="img" aria-label="D Party uf em Chapf: Bauernhaus, Wiese und alli, wo chöme"></svg>
-        <p id="scene-phase" class="scene-phase" aria-hidden="true"></p>
-      </div>
-      <p class="small">Jedes Mönschli isch e aagmäldeti Person (inkl. Begleitig). Drück uf <strong>🎉 PARTY-MODUS</strong>, de chöme alli z loufe.</p>
+      <p class="small">Chunnsch, wenn's dir passt. Bi der Aamäldig chasch aachrüzle, wenn de ungefähr da bisch. Klick uf e Zyt, de gsehsch se unde im Bild.</p>
     </section>
 
     <!-- Schritt 1: Rätsel -->
@@ -186,6 +176,34 @@
       </form>
     </section>
 
+    <!-- Schritt 3: Danke -->
+    <section id="done" class="box" hidden>
+      <h2>🎉 Merci! 🎉</h2>
+      <p id="done-text"></p>
+      <p id="done-love" class="done-love" hidden>Mir fröie üs riesig uf di! 💖<br><small>Tim, Röbu, Chrigu &amp; Melu</small></p>
+      <p id="done-cal" hidden>
+        <a class="btn btn-go" href="/api/event.ics" download="kapf-4x30.ics">📅 In den Kalender!</a>
+        <br><small>Damit du es nicht vergisst. Wir kennen dich.</small>
+      </p>
+      <pre class="ascii small-ascii">
+   ( (  ( (
+    ) )  ) )
+  .-------------.
+  | 30 30 30 30 |
+  |_____________|
+</pre>
+    </section>
+
+    <!-- Die Party als Bild, füllt sich mit den Angemeldeten (party-scene.js) -->
+    <section id="scene" class="box scene">
+      <h2><span class="blink">▶</span> Wär isch scho uf em Chapf?</h2>
+      <div class="scene-wrap">
+        <svg id="scene-svg" class="scene-svg" viewBox="0 0 800 450" role="img" aria-label="D Party uf em Chapf: Bauernhaus, Wiese und alli, wo chöme"></svg>
+        <p id="scene-phase" class="scene-phase" aria-hidden="true"></p>
+      </div>
+      <p class="small">Jedes Mönschli isch e aagmäldeti Person (inkl. Begleitig). Drück uf <strong>🎉 PARTY-MODUS</strong>, de chöme alli z loufe. Oder klick obe im Plan uf e Zyt.</p>
+    </section>
+
     <!-- Minigames (games.js) -->
     <section id="games" class="box games">
       <h2><span class="blink">▶</span> Wäm Längwilig isch</h2>
@@ -207,23 +225,6 @@
       <p id="game-status" class="small"></p>
     </section>
 
-    <!-- Schritt 3: Danke -->
-    <section id="done" class="box" hidden>
-      <h2>🎉 Merci! 🎉</h2>
-      <p id="done-text"></p>
-      <p id="done-love" class="done-love" hidden>Mir fröie üs riesig uf di! 💖<br><small>Tim, Röbu, Chrigu &amp; Melu</small></p>
-      <p id="done-cal" hidden>
-        <a class="btn btn-go" href="/api/event.ics" download="kapf-4x30.ics">📅 In den Kalender!</a>
-        <br><small>Damit du es nicht vergisst. Wir kennen dich.</small>
-      </p>
-      <pre class="ascii small-ascii">
-   ( (  ( (
-    ) )  ) )
-  .-------------.
-  | 30 30 30 30 |
-  |_____________|
-</pre>
-    </section>
   </main>
 
   <footer>

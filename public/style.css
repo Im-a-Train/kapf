@@ -570,6 +570,11 @@ body.collapsed { overflow: hidden; }
 .plan-item:nth-child(2) { background: var(--green); animation-delay: -0.8s; }
 .plan-item:nth-child(3) { background: #ff9e80; animation-delay: -1.6s; }
 .plan-item:nth-child(4) { background: var(--black); color: var(--yellow); box-shadow: 5px 5px 0 var(--green); animation-delay: -2.4s; }
+.plan-btn { all: unset; display: block; width: 100%; cursor: pointer; }
+.plan-btn:focus-visible { outline: 3px dashed var(--blue); outline-offset: 4px; }
+.plan-look { display: block; margin-top: 6px; font: 9px/1.4 "Press Start 2P", monospace; opacity: 0.7; }
+.plan-item:has(.plan-btn:hover), .plan-item:has([aria-pressed="true"]) { outline: 4px solid var(--blue); outline-offset: 3px; }
+.plan-item:has([aria-pressed="true"]) .plan-look { opacity: 1; }
 .plan-emoji { display: block; font-size: 34px; line-height: 1; }
 .plan-when { display: block; font: 11px/1.6 "Press Start 2P", monospace; margin-top: 6px; }
 .plan-what { display: block; font-family: "Permanent Marker", cursive; font-size: 22px; font-weight: normal; }
@@ -685,6 +690,7 @@ footer { padding-bottom: 80px; }
 html:not(.party) *, html:not(.party) *::before, html:not(.party) *::after { animation: none !important; }
 html:not(.party) .floaters, html:not(.party) .crew { display: none; }
 html:not(.party) .marquee span { padding-left: 16px; }
+.arrive-input { font: 20px "VT323", monospace; padding: 2px 6px; border: 3px solid var(--black); background: var(--yellow); }
 @media (max-width: 600px) {
   .scene-phase { font-size: 8px; left: 6px; top: 6px; padding: 3px 4px; }
   .party-btn { font-size: 11px; padding: 10px; }

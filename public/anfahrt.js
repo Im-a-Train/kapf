@@ -14,13 +14,16 @@ let event = null;
 let mode = 'oev';
 // Aktueller Startpunkt: { label, query, lat, lon, stationId? }
 let origin = null;
+// «Ankunft spätestens»: einstellbar, Standard aus config/event.js (16:00)
+let arriveBy = '16:00';
 
 const eventReady = fetch('/api/event').then((r) => r.json()).then((data) => {
   event = data;
   $('#coords-label').textContent = event.coordsLabel;
   $('#stop-name').textContent = event.stop.name;
   $('#oev-date').textContent = event.dateLabel.replace(/^\S+,\s*/, '');
-  $('#oev-arrive').textContent = event.arriveBy;
+  arriveBy = event.arriveBy ?? arriveBy;
+  $('#oev-arrive').value = arriveBy;
   const { e, n } = event.lv95;
   $('#swisstopo-link').href = `https://map.geo.admin.ch/#/map?lang=de&center=${e},${n}&z=8&bgLayer=ch.swisstopo.pixelkarte-farbe&crosshair=marker,${e},${n}`;
   const mapUrl = `https://map.geo.admin.ch/#/embed?lang=de&center=${e},${n}&z=7&bgLayer=ch.swisstopo.pixelkarte-farbe&crosshair=marker,${e},${n}`;
@@ -156,7 +159,7 @@ async function loadConnections() {
   url.searchParams.set('from', origin.stationId ?? origin.query);
   url.searchParams.set('to', event.stop.id);
   url.searchParams.set('date', `${m}/${d}/${y}`);
-  url.searchParams.set('time', event.arriveBy);
+  url.searchParams.set('time', arriveBy);
   url.searchParams.set('time_type', 'arrival');
   // Die drei letzten Verbindungen, die VOR der Zeit ankommen (pre), keine danach (num)
   url.searchParams.set('pre', '3');
@@ -210,9 +213,10 @@ function updateSbbLink() {
   const from = origin?.stationId
     ? { value: origin.stationId, type: 'ID', label: origin.query }
     : { value: origin?.query ?? '', type: 'NAME', label: origin?.query ?? '' };
-  const [h, m] = event.arriveBy.split(':').map(Number);
+  const [h, m] = arriveBy.split(':').map(Number);
   // 30 Minuten Reserve für den Fussweg ab Haltestelle
-  const time = `${String(h - (m < 30 ? 1 : 0)).padStart(2, '0')}:${String((m + 30) % 60).padStart(2, '0')}`;
+  const mins = Math.max(0, h * 60 + m - 30);
+  const time = `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
   const q = new URLSearchParams({
     stops: JSON.stringify(origin ? [from, to] : [to]),
     date: JSON.stringify(event.date),
@@ -221,6 +225,15 @@ function updateSbbLink() {
   });
   $('#sbb-link').href = `https://www.sbb.ch/de?${q}`;
 }
+
+// Andere Ankunftszeit: Verbindungen neu holen (leer = zurück auf den Standard)
+$('#oev-arrive').addEventListener('change', async (e) => {
+  await eventReady;
+  arriveBy = /^\d{2}:\d{2}$/.test(e.target.value) ? e.target.value : (event.arriveBy ?? '16:00');
+  e.target.value = arriveBy;
+  if (origin) loadConnections();
+  else updateSbbLink();
+});
 
 // ---------- Auto ----------
 function updateCarLink() {
