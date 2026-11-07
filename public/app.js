@@ -32,12 +32,16 @@ api('/api/event').then(({ data }) => {
 // ---------- Grober Plan + Checkboxen «Wenn bisch derbii?» ----------
 function renderPlan() {
   $('#plan-list').replaceChildren(...event.plan.map((p, i) => {
+    // Klick zeigt diese Tageszeit im Wimmelbild (party-scene.js)
     const li = document.createElement('li');
     li.className = `plan-item tilt-${i % 2 ? 'r' : 'l'}`;
-    li.innerHTML = '<span class="plan-emoji"></span><span class="plan-when"></span><strong class="plan-what"></strong>';
+    li.innerHTML = '<button type="button" class="plan-btn" aria-pressed="false"><span class="plan-emoji"></span><span class="plan-when"></span><strong class="plan-what"></strong><span class="plan-look">👀 im Bild aaluege</span></button>';
+    const btn = li.querySelector('button');
+    btn.dataset.phase = p.id;
     li.querySelector('.plan-emoji').textContent = p.emoji;
     li.querySelector('.plan-when').textContent = p.when;
     li.querySelector('.plan-what').textContent = p.what;
+    btn.addEventListener('click', () => dispatchEvent(new CustomEvent('kapf:phase', { detail: p.id })));
     return li;
   }));
   $('#parts-list').replaceChildren(...event.plan.map((p) => {

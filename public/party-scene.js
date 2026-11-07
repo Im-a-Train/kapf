@@ -356,12 +356,14 @@ function zsort() {
   [...figures].sort((a, b) => a.y - b.y).forEach((f) => people.append(f.g));
 }
 
-// Ohne Party: alle stehen ruhig an ihrem Platz, Nachmittag
-function settle() {
+// Ohne Party: alle stehen ruhig da. Am Nachmittag an ihrem festen Platz, zu den anderen
+// Zeiten (Klick im Plan) dort, wo dann etwas los ist: am Tisch, am Feuer, auf der Tanzfläche.
+function settle(i = 1) {
   running = false;
-  setPhase(1);
+  setPhase(i);
   for (const f of figures) {
-    Object.assign(f, { ...f.home, arrived: true, mode: 'idle', flip: false });
+    const spot = i === 1 || f.host ? f.home : zoneSpot(pickZone());
+    Object.assign(f, { ...spot, arrived: true, mode: 'idle', flip: false });
     f.g.classList.remove('walk', 'dance', 'away');
     place(f);
   }
@@ -397,6 +399,20 @@ function setPhase(i) {
   night.setAttribute('opacity', p.dark);
   const item = plan.find((x) => x.id === p.id);
   phaseEl.textContent = item ? `${item.emoji} ${item.when}: ${item.what}` : '';
+  for (const b of document.querySelectorAll('#plan-list [data-phase]')) {
+    b.setAttribute('aria-pressed', String(b.dataset.phase === p.id));
+  }
+}
+
+// Klick auf einen Punkt im Plan (app.js): das Bild springt zu dieser Tageszeit.
+// Im Party-Modus geht der Tag von dort aus weiter, sonst bleibt es ein Standbild.
+function showPhase(id) {
+  const i = PHASES.findIndex((p) => p.id === id);
+  if (i < 0) return;
+  if (!running) { settle(i); return; }
+  phaseAt = performance.now();
+  setPhase(i);
+  for (const f of figures) if (f.arrived && f.mode !== 'walk') f.wait = rand() * 800;
 }
 
 let last = 0;
@@ -580,6 +596,11 @@ if (svg) {
     }
     spawnAt = performance.now() + 1500;
     zsort();
+  });
+
+  addEventListener('kapf:phase', ({ detail: id }) => {
+    showPhase(id);
+    document.querySelector('#scene').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
   // Nur rechnen, wenn man die Kachel sieht
