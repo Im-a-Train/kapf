@@ -65,13 +65,13 @@ export function createApp({ event, riddles, store, planning, secret, adminPasswo
     return json(res, 201, { id: created.id, name: created.name, attending: created.attending });
   });
 
-  // Wer kommt? Für die Party-Kachel. Bewusst nur Vorname + Anzahl Begleitung,
+  // Wer kommt? Für die Party-Kachel. Bewusst ohne Namen, nur die Anzahl Begleitung,
   // in der Reihenfolge der Anmeldung (so füllt sich die Party).
   route('GET', '/api/party', async ({ res }) => {
     const guests = (await store.list())
       .filter((r) => r.attending === 'yes')
       .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))
-      .map((r) => ({ name: firstName(r.name), plus: r.companions || 0 }));
+      .map((r) => ({ plus: r.companions || 0 }));
     return json(res, 200, { hosts: event.hosts, guests });
   });
 
@@ -161,10 +161,6 @@ async function serveStatic(pathname, res) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('404 – Hier ist kein Kapf.');
   }
-}
-
-function firstName(name) {
-  return String(name ?? '').trim().split(/\s+/)[0].slice(0, 20) || '?';
 }
 
 function json(res, status, data) {

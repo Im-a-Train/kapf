@@ -69,7 +69,7 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
   assert.equal(reg.status, 201);
 
   const party = await call('/api/party');
-  assert.deepEqual(party.data.guests, [{ name: 'Heidi', plus: 5 }], 'nur Vorname und Begleitung');
+  assert.deepEqual(party.data.guests, [{ plus: 5 }], 'keine Namen, nur Begleitung');
 
   assert.equal((await call('/api/admin/registrations')).status, 401);
   assert.equal((await call('/api/admin/login', { method: 'POST', body: { password: 'falsch' } })).status, 401);

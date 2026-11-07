@@ -17,7 +17,7 @@ export const event = {
   plan: [
     { id: 'vormittag', when: 'Vormittag', what: 'Brunch', emoji: '🥐' },
     { id: 'nachmittag', when: 'Nachmittag', what: 'Spiel und Spass', emoji: '🎯' },
-    { id: 'abend', when: 'Abend', what: "Z'Nacht und plaudern", emoji: '🍖' },
+    { id: 'abend', when: 'Abend', what: "Z'Nacht und plaudern", emoji: '🍝' },
     { id: 'nacht', when: 'Nacht', what: 'Schwoofe und Fiire', emoji: '🔥' },
   ],
   // Für die Kalenderdatei (/api/event.ics), Ortszeit Schweiz

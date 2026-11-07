@@ -1,5 +1,6 @@
 // Die Party als Bild: Bauernhaus auf dem Chapf, Wald, Maisfeld, Kühe, Berge im Hintergrund.
-// Jede angemeldete Person (inkl. Begleitung) ist ein Männli, dazu wir vier Gastgeber.
+// Jede angemeldete Person (inkl. Begleitung) ist ein Mönschli, dazu wir vier Gastgeber.
+// Namen gibt es nur für uns vier; von den Gästen kennt die Seite nur die Anzahl.
 //
 // Ohne Party-Modus steht alles still: alle sind schon da, die Sonne steht am Nachmittag.
 // Im Party-Modus kommen die Gäste der Reihe nach (wie sie sich angemeldet haben) über die
@@ -7,7 +8,6 @@
 import { isParty } from './party.js';
 
 const svg = document.querySelector('#scene-svg');
-const countEl = document.querySelector('#scene-count');
 const phaseEl = document.querySelector('#scene-phase');
 const NS = 'http://www.w3.org/2000/svg';
 const MAX_FIGURES = 160;
@@ -117,6 +117,9 @@ function drawLandscape() {
     el('circle', { cx: x, cy: y - 4, r: 14 * s, fill: '#3e8e41' }, forest);
   }
 
+  // Kühe hinten links auf der Weide (eine feiert mit)
+  for (const [x, y, c, hat] of [[105, 266, '#8d4a1d', false], [150, 274, '#1a1a1a', true], [190, 284, '#a0522d', false], [125, 288, '#8d4a1d', false]]) cow(x, y, c, hat, 0.55);
+
   // Wiese vorne
   el('path', { fill: 'url(#meadow)', d: `M0 ${meadowEdge(0)} ${Array.from({ length: 41 }, (_, i) => `L${i * 20} ${meadowEdge(i * 20)}`).join(' ')} L800 450 L0 450 Z` }, svg);
 
@@ -141,13 +144,11 @@ function drawLandscape() {
   const table = el('g', { transform: `translate(${ZONES.table.x} ${ZONES.table.y - 14})` }, svg);
   el('rect', { x: -70, y: -6, width: 140, height: 7, fill: '#8d5a2b', stroke: '#000', 'stroke-width': 1 }, table);
   for (const x of [-62, 58]) el('rect', { x, y: 1, width: 4, height: 10, fill: '#5d4037' }, table);
-  for (const [x, t] of [[-50, '🥐'], [-20, '🍺'], [10, '🍖'], [40, '🎂']]) {
+  for (const [x, t] of [[-50, '🥐'], [-20, '🍺'], [10, '🍝'], [40, '🎂']]) {
     const tx = el('text', { x, y: -7, 'font-size': 11, 'text-anchor': 'middle' }, table);
     tx.textContent = t;
   }
 
-  // Kühe (eine feiert mit)
-  for (const [x, y, c, hat] of [[650, 430, '#8d4a1d', false], [700, 418, '#1a1a1a', true], [742, 436, '#a0522d', false], [80, 430, '#8d4a1d', false]]) cow(x, y, c, hat);
 
   // Nacht-Abdunklung über der Landschaft, Lichter und Leute bleiben hell
   night = el('rect', { width: 800, height: 450, fill: '#0a1030', opacity: 0, class: 'night' }, svg);
@@ -185,8 +186,8 @@ function house() {
   t.textContent = 'CHAPF';
 }
 
-function cow(x, y, color, hat) {
-  const g = el('g', { transform: `translate(${x} ${y})`, class: 'cow' }, svg);
+function cow(x, y, color, hat, scale = 1) {
+  const g = el('g', { transform: `translate(${x} ${y}) scale(${scale})`, class: 'cow' }, svg);
   el('ellipse', { cx: 0, cy: 0, rx: 15, ry: 7, fill: color }, g);
   el('ellipse', { cx: -4, cy: -1, rx: 4, ry: 3, fill: '#fff', opacity: 0.85 }, g);
   el('ellipse', { cx: 15, cy: -5, rx: 5, ry: 4, fill: color }, g);
@@ -216,9 +217,9 @@ function lights() {
 }
 
 // ---------- Leute ----------
-// Eine Person: Strichmännli mit farbigem Pulli; Gastgeber grösser, mit Hut und Namen
-function figure({ name, color, host, title, me }) {
-  const g = el('g', { class: `p${host ? ' host' : ''}${me ? ' me' : ''}` });
+// Eine Person: Strich-Mönschli mit farbigem Pulli; Gastgeber grösser, mit Hut und Namen
+function figure({ name, color, host, title }) {
+  const g = el('g', { class: `p${host ? ' host' : ''}` });
   el('title', {}, g).textContent = title;
   const body = el('g', { class: 'body' }, g);
   el('path', { class: 'leg l1', d: 'M0 -9 L-3 0' }, body);
@@ -288,10 +289,9 @@ function build() {
   for (const g of guests) addGuest(g);
   if (isParty()) startParty();
   else settle();
-  updateCount();
 }
 
-// Ein Gast und seine Begleitung als Männli (höchstens MAX_FIGURES insgesamt)
+// Ein Gast und seine Begleitung als Mönschli (ohne Namen, die zeigen wir nur von uns vier) (höchstens MAX_FIGURES insgesamt)
 function addGuest(g) {
   const added = [];
   let n = figures.filter((f) => !f.host).length;
@@ -299,10 +299,8 @@ function addGuest(g) {
     const companion = k > 0;
     const f = {
       g: figure({
-        name: companion ? '+1' : g.me ? `${g.name} (du!)` : g.name,
         color: SHIRTS[(n * 7) % SHIRTS.length],
-        title: companion ? `Begleitung vo ${g.name}` : g.name,
-        me: g.me,
+        title: companion ? 'Begleitig' : 'Gast',
       }),
       home: homeSpot(n),
     };
@@ -310,22 +308,6 @@ function addGuest(g) {
     added.push(f);
   }
   return added;
-}
-
-const total = () => guests.reduce((s, g) => s + 1 + g.plus, 0) + hosts.length;
-
-function updateCount() {
-  const all = total();
-  const shown = figures.length;
-  const more = all > shown ? ` (vo dene ${all - shown} nid im Bild, z vil Lüt!)` : '';
-  if (!guests.length) {
-    countEl.textContent = `Bis itz sy nume mir ${hosts.length} da. Das wird es gmüetlechs Fest … meld di a!`;
-  } else if (running) {
-    const here = figures.filter((f) => f.arrived).length;
-    countEl.textContent = `🎉 ${here} vo ${all} Lüt sy scho uf em Chapf${more}`;
-  } else {
-    countEl.textContent = `${all} Lüt chöme, mit üs ${hosts.length} zäme${more}. Es wird voll!`;
-  }
 }
 
 function place(f) {
@@ -349,7 +331,6 @@ function settle() {
     place(f);
   }
   zsort();
-  updateCount();
 }
 
 function startParty() {
@@ -367,7 +348,6 @@ function startParty() {
   }
   spawnAt = performance.now() + 600;
   running = true;
-  updateCount();
   loop();
 }
 
@@ -419,7 +399,7 @@ function loop(now = performance.now()) {
       if (d <= step) {
         f.x = f.target.x;
         f.y = f.target.y;
-        if (!f.arrived) { f.arrived = true; updateCount(); }
+        f.arrived = true;
         const dancing = PHASES[phase].id === 'nacht' && Math.hypot((f.x - ZONES.dance.x) / ZONES.dance.rx, (f.y - ZONES.dance.y) / ZONES.dance.ry) < 1.3;
         f.mode = dancing ? 'dance' : 'idle';
         f.wait = (dancing ? 4000 : 1500) + rand() * 5000;
@@ -469,7 +449,7 @@ if (svg) {
 
   // Frisch angemeldet: du kommst dazu (im Party-Modus über die Strasse)
   addEventListener('kapf:registered', ({ detail }) => {
-    const g = { name: String(detail.name).trim().split(/\s+/)[0], plus: detail.plus, me: true };
+    const g = { plus: detail.plus };
     guests.push(g);
     const added = addGuest(g);
     for (const f of added) {
@@ -483,7 +463,6 @@ if (svg) {
     }
     spawnAt = performance.now() + 1500;
     zsort();
-    updateCount();
   });
 
   // Nur rechnen, wenn man die Kachel sieht

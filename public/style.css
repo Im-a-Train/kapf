@@ -601,7 +601,8 @@ body.collapsed { overflow: hidden; }
   padding: 4px 6px;
 }
 .scene-phase:empty { display: none; }
-.scene-count { font-family: "Bangers", cursive; font-size: 24px; letter-spacing: 1px; margin: 14px 0 4px; }
+.done-love { font-family: "Bangers", cursive; font-size: 30px; letter-spacing: 1px; color: var(--pink); -webkit-text-stroke: 1px var(--black); margin: 16px 0; }
+.done-love small { font-family: "Caveat", cursive; font-size: 24px; color: var(--black); -webkit-text-stroke: 0; }
 .scene-svg .sign { font-family: "Press Start 2P", monospace; font-size: 6px; }
 .scene-svg .sun { fill: #ffe14d; transition: cx 2s, cy 2s, fill 2s; }
 .scene-svg[data-phase="abend"] .sun { fill: #ff7043; }
@@ -619,7 +620,7 @@ body.collapsed { overflow: hidden; }
 .scene-svg .fire-glow { opacity: 0.4; }
 .scene-svg[data-phase="nacht"] .fire-glow { opacity: 1; }
 
-/* Männli */
+/* Mönschli */
 .scene-svg .p { cursor: help; }
 .scene-svg .p .leg, .scene-svg .p .arm { stroke: #000; stroke-width: 1.6; stroke-linecap: round; fill: none; }
 .scene-svg .p circle { stroke: #000; stroke-width: 1.2; }
@@ -633,8 +634,7 @@ body.collapsed { overflow: hidden; }
   opacity: 0;
   pointer-events: none;
 }
-.scene-svg .p.host .lbl, .scene-svg .p.me .lbl, .scene-svg .p:hover .lbl { opacity: 1; }
-.scene-svg .p.me .lbl { fill: var(--pink); }
+.scene-svg .p.host .lbl { opacity: 1; }
 .scene-svg .p.flip .lbl { transform: scaleX(-1); }
 .scene-svg .p .leg, .scene-svg .p .arm { transform-box: view-box; }
 .scene-svg .p .l1, .scene-svg .p .l2 { transform-origin: 0 -9px; }

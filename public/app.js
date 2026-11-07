@@ -179,6 +179,7 @@ form.addEventListener('submit', async (e) => {
       ? `${data.name}, du bist dabei! Wir sehen uns am ${event.dateLabel} im ${event.location}.`
       : `Schade, ${data.name}. Wir trinken eins auf dich.`;
     $('#done-cal').hidden = data.attending !== 'yes';
+    $('#done-love').hidden = data.attending !== 'yes';
     if (data.attending === 'yes') {
       dispatchEvent(new CustomEvent('kapf:registered', { detail: { name: body.name, plus: Number(body.companions) || 0 } }));
     }

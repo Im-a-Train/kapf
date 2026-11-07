@@ -106,7 +106,7 @@ class Guy {
     setTimeout(() => this.run(), 800 + i * 1700);
   }
 
-  // Party vorbei: Männli verschwindet, laufende Bewegungen brechen ab
+  // Party vorbei: Mönschli verschwindet, laufende Bewegungen brechen ab
   kill() {
     this.dead = true;
     this.el.remove();

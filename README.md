@@ -91,7 +91,7 @@ test/                API-Tests (node:test)
 | GET     | `/api/event`                      | Event-Infos aus `config/event.js` |
 | GET     | `/api/event.ics`                  | Kalenderdatei zum Fest            |
 | GET     | `/api/riddle?not=<id>`            | Zufälliges Rätsel (ohne Antwort)  |
-| GET     | `/api/party`                      | Zusagen für die Party-Kachel (nur Vorname + Anzahl Begleitung) |
+| GET     | `/api/party`                      | Zusagen für die Party-Kachel (ohne Namen, nur Anzahl Begleitung) |
 | POST    | `/api/riddle/solve`               | `{id, answer}` → `{ok, token}`    |
 | POST    | `/api/registrations`              | Anmeldung (braucht `riddleToken`) |
 | POST    | `/api/admin/login`, `/logout`     | Admin-Session (Cookie)            |
