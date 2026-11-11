@@ -64,12 +64,12 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
 
   const reg = await call('/api/registrations', {
     method: 'POST',
-    body: { riddleToken: solved.data.token, name: 'Heidi Muster', attending: 'yes', companions: '5', diet: 'vegi', sleepover: 'on', parts: ['nacht', 'abend', 'quatsch'] },
+    body: { riddleToken: solved.data.token, name: 'Heidi Muster', attending: 'yes', companions: '5', diet: 'vegi', sleepover: 'on', car: 'on', parts: ['nacht', 'abend', 'nachmittag', 'quatsch'] },
   });
   assert.equal(reg.status, 201);
 
   const party = await call('/api/party');
-  assert.deepEqual(party.data.guests, [{ plus: 5 }], 'keine Namen, nur Begleitung');
+  assert.deepEqual(party.data.guests, [{ plus: 5, parts: ['abend', 'nacht'] }], 'keine Namen, nur Begleitung und Zeiten');
 
   assert.equal((await call('/api/admin/registrations')).status, 401);
   assert.equal((await call('/api/admin/login', { method: 'POST', body: { password: 'falsch' } })).status, 401);
@@ -80,13 +80,15 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
   const list = await call('/api/admin/registrations', { cookie });
   assert.equal(list.data.length, 1);
   assert.equal(list.data[0].companions, 5);
-  assert.deepEqual(list.data[0].parts, ['abend', 'nacht']);
+  assert.deepEqual(list.data[0].parts, ['abend', 'nacht'], 'Nachmittag braucht keine Anmeldung');
+  assert.equal(list.data[0].car, 'yes');
   assert.equal(list.data[0].sleepover, 'yes');
 
   const patched = await call(`/api/admin/registrations/${reg.data.id}`, { method: 'PATCH', cookie, body: { attending: 'no', note: 'abgesagt per SMS' } });
   assert.equal(patched.data.attending, 'no');
   assert.equal(patched.data.companions, 0);
   assert.equal(patched.data.sleepover, 'no');
+  assert.equal(patched.data.car, 'no');
   assert.equal(patched.data.note, 'abgesagt per SMS');
   assert.equal((await call('/api/party')).data.guests.length, 0);
 
@@ -94,6 +96,7 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
   const csvText = await csv.text();
   assert.match(csvText, /Heidi/);
   assert.match(csvText, /sleepover/);
+  assert.match(csvText, /;car;/);
 
   assert.equal((await call(`/api/admin/registrations/${reg.data.id}`, { method: 'DELETE', cookie })).status, 200);
   assert.equal((await call('/api/admin/registrations', { cookie })).data.length, 0);

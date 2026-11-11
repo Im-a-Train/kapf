@@ -49,8 +49,9 @@ function render() {
     ['Personen total', yes.reduce((n, r) => n + 1 + (r.companions || 0), 0)],
     ['Absagen', registrations.length - yes.length],
     ['Übernachten (Pers.)', yes.filter((r) => r.sleepover === 'yes').reduce((n, r) => n + 1 + (r.companions || 0), 0)],
+    ['🚗 Autos', yes.filter((r) => r.car === 'yes').length],
     ['Mit Essenswunsch', yes.filter((r) => r.diet).length],
-    ...plan.map((p) => [`${p.emoji} ${p.when} (Pers.)`, yes.filter((r) => r.parts?.includes(p.id)).reduce((n, r) => n + 1 + (r.companions || 0), 0)]),
+    ...plan.filter((p) => p.signup !== false).map((p) => [`${p.emoji} ${p.when} (Pers.)`, yes.filter((r) => r.parts?.includes(p.id)).reduce((n, r) => n + 1 + (r.companions || 0), 0)]),
     ['🤷 Sponti (Pers.)', yes.filter((r) => r.parts?.includes('spontan')).reduce((n, r) => n + 1 + (r.companions || 0), 0)],
   ];
   $('#stats').replaceChildren(...stats.map(([label, n]) => el('div', { class: 'stat' }, el('b', {}, n), label)));
@@ -62,6 +63,7 @@ function render() {
     el('td', { class: 'wrap' }, r.companionNames),
     el('td', { class: 'wrap' }, partsLabel(r.parts)),
     el('td', {}, r.sleepover === 'yes' ? '🏕️' : ''),
+    el('td', {}, r.car === 'yes' ? '🚗' : ''),
     el('td', { class: 'wrap' }, r.diet),
     el('td', { class: 'wrap' }, r.message),
     el('td', { class: 'wrap' }, r.note),
@@ -90,6 +92,7 @@ function edit(r) {
   const f = $('#edit-form').elements;
   for (const k of ['name', 'email', 'attending', 'companions', 'companionNames', 'diet', 'message', 'note']) f[k].value = r[k] ?? '';
   f.sleepover.value = r.sleepover === 'yes' ? 'yes' : 'no';
+  f.car.value = r.car === 'yes' ? 'yes' : 'no';
   $('#edit-error').textContent = '';
   $('#edit').showModal();
 }

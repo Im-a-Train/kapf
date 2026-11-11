@@ -5,6 +5,9 @@
 // Ohne Party-Modus steht alles still: alle sind schon da, die Sonne steht am Nachmittag.
 // Im Party-Modus kommen die Gäste der Reihe nach (wie sie sich angemeldet haben) über die
 // Strasse, und der Tag läuft durch den groben Plan: Brunch → Spiel → Z'Nacht → Schwoofe.
+// Zu jeder Tageszeit sind nur die da, die sich dafür angemeldet haben (sponti = immer).
+// Für Zeiten ohne Anmeldung (`signup: false`, der Nachmittag) gilt der Schnitt der Zeit davor
+// und danach (Brunch und Abend).
 import { isParty } from './party.js';
 
 const svg = document.querySelector('#scene-svg');
@@ -322,6 +325,7 @@ function build() {
     figures.push({ g: figure({ name, color, host: true, title: `${name} (Gastgeber*in)` }), home: { x: 345 + i * 38, y: 334 + (i % 2) * 14 }, host: true });
   });
   for (const g of guests) addGuest(g);
+  presence();
   if (isParty()) startParty();
   else settle();
 }
@@ -329,6 +333,7 @@ function build() {
 // Ein Gast und seine Begleitung als Mönschli (ohne Namen, die zeigen wir nur von uns vier) (höchstens MAX_FIGURES insgesamt)
 function addGuest(g) {
   const added = [];
+  const parts = g.parts ?? [];
   let n = figures.filter((f) => !f.host).length;
   for (let k = 0; k <= g.plus && n < MAX_FIGURES; k++, n++) {
     const companion = k > 0;
@@ -338,11 +343,56 @@ function addGuest(g) {
         title: companion ? 'Begleitig' : 'Gast',
       }),
       home: homeSpot(n),
+      parts,
+      at: new Set(),
     };
     figures.push(f);
     added.push(f);
   }
   return added;
+}
+
+// Wer ist wann da? Ohne Angabe (alte Anmeldungen) oder sponti: immer.
+function presence() {
+  const guestFigs = figures.filter((f) => !f.host);
+  const asked = (p) => plan.find((x) => x.id === p.id)?.signup !== false;
+  PHASES.forEach((p) => {
+    if (!asked(p)) return;
+    for (const f of guestFigs) {
+      const always = !f.parts.length || f.parts.includes('spontan');
+      if (always || f.parts.includes(p.id)) f.at.add(p.id); else f.at.delete(p.id);
+    }
+  });
+  PHASES.forEach((p, i) => {
+    if (asked(p)) return;
+    // Schnitt der Nachbarn; zuerst die, die vorher und nachher da sind
+    const before = PHASES[i - 1]?.id;
+    const after = PHASES[i + 1]?.id;
+    const count = (id) => guestFigs.filter((f) => f.at.has(id)).length;
+    const n = Math.round((count(before) + count(after)) / 2);
+    const score = (f) => Number(f.at.has(before)) + Number(f.at.has(after));
+    const ranked = guestFigs.map((f, k) => ({ f, k })).sort((a, b) => score(b.f) - score(a.f) || a.k - b.k);
+    ranked.forEach(({ f }, k) => (k < n ? f.at.add(p.id) : f.at.delete(p.id)));
+  });
+}
+const here = (f, i = phase) => f.host || f.at.has(PHASES[i].id);
+
+// Im Party-Modus beim Wechsel der Tageszeit: wer nicht mehr dabei ist, geht über die Strasse,
+// wer neu dazukommt, stellt sich an.
+function arriveAndLeave() {
+  for (const f of figures) {
+    if (f.host) continue;
+    if (here(f)) {
+      if (f.mode === 'gone') Object.assign(f, { ...ENTRANCE, arrived: false, mode: 'queue' });
+      else if (f.mode === 'leave') { f.mode = 'walk'; f.target = zoneSpot(pickZone()); }
+    } else if (f.mode === 'queue') {
+      f.mode = 'gone';
+    } else if (f.mode !== 'gone' && f.mode !== 'leave') {
+      f.mode = 'leave';
+      f.target = { ...ENTRANCE };
+      f.g.classList.remove('dance');
+    }
+  }
 }
 
 function place(f) {
@@ -365,6 +415,7 @@ function settle(i = 1) {
     const spot = i === 1 || f.host ? f.home : zoneSpot(pickZone());
     Object.assign(f, { ...spot, arrived: true, mode: 'idle', flip: false });
     f.g.classList.remove('walk', 'dance', 'away');
+    if (!here(f, i)) { f.mode = 'gone'; f.g.classList.add('away'); }
     place(f);
   }
   zsort();
@@ -378,7 +429,7 @@ function startParty() {
     if (f.host) {
       Object.assign(f, { ...f.home, arrived: true, mode: 'idle', wait: rand() * 2000 });
     } else {
-      Object.assign(f, { ...ENTRANCE, arrived: false, mode: 'queue' });
+      Object.assign(f, { ...ENTRANCE, arrived: false, mode: here(f) ? 'queue' : 'gone' });
       f.g.classList.add('away');
     }
     place(f);
@@ -412,6 +463,7 @@ function showPhase(id) {
   if (!running) { settle(i); return; }
   phaseAt = performance.now();
   setPhase(i);
+  arriveAndLeave();
   for (const f of figures) if (f.arrived && f.mode !== 'walk') f.wait = rand() * 800;
 }
 
@@ -427,6 +479,7 @@ function loop(now = performance.now()) {
   if (now - phaseAt > PHASE_MS) {
     phaseAt = now;
     setPhase((phase + 1) % PHASES.length);
+    arriveAndLeave();
     for (const f of figures) if (f.arrived && f.mode !== 'walk') f.wait = rand() * 1500;
   }
 
@@ -441,13 +494,19 @@ function loop(now = performance.now()) {
   }
 
   for (const f of figures) {
-    if (f.mode === 'queue') continue;
-    if (f.mode === 'walk') {
+    if (f.mode === 'queue' || f.mode === 'gone') continue;
+    if (f.mode === 'walk' || f.mode === 'leave') {
       const dx = f.target.x - f.x;
       const dy = f.target.y - f.y;
       const d = Math.hypot(dx, dy);
-      const step = 0.045 * dt * (f.arrived ? 1 : 1.4);
-      if (d <= step) {
+      const step = 0.045 * dt * (f.mode === 'leave' ? 3 : f.arrived ? 1 : 1.4); // wer geht, geht zügig
+      if (d <= step && f.mode === 'leave') {
+        // über die Strasse weg, bis zur nächsten Tageszeit
+        Object.assign(f, { ...ENTRANCE, arrived: false, mode: 'gone' });
+        f.g.classList.remove('walk');
+        f.g.classList.add('away');
+        place(f);
+      } else if (d <= step) {
         f.x = f.target.x;
         f.y = f.target.y;
         f.arrived = true;
@@ -582,18 +641,17 @@ if (svg) {
 
   // Frisch angemeldet: du kommst dazu (im Party-Modus über die Strasse)
   addEventListener('kapf:registered', ({ detail }) => {
-    const g = { plus: detail.plus };
+    const g = { plus: detail.plus, parts: detail.parts ?? [] };
     guests.push(g);
     const added = addGuest(g);
+    presence();
+    if (!running) { settle(phase); return; }
     for (const f of added) {
-      if (running) {
-        Object.assign(f, { ...ENTRANCE, arrived: false, mode: 'queue' });
-        f.g.classList.add('away');
-      } else {
-        Object.assign(f, { ...f.home, arrived: true, mode: 'idle' });
-      }
+      Object.assign(f, { ...ENTRANCE, arrived: false, mode: 'gone' });
+      f.g.classList.add('away');
       place(f);
     }
+    arriveAndLeave();
     spawnAt = performance.now() + 1500;
     zsort();
   });
