@@ -67,11 +67,11 @@ setInterval(tick, 1000);
 // ---------- Rätsel ----------
 const NOPE = [
   'Falsch. Aber schön geschrieben.',
-  'Nope. Tim hätte das gewusst. Vielleicht.',
+  'Noch nicht ganz. Tim musste auch zweimal überlegen.',
   'Knapp daneben ist auch vorbei.',
-  'Nein. Röbu lacht dich gerade aus.',
+  'Fast! Röbu drückt dir die Daumen.',
   'Hast du es mit Ausdrucken und Anschauen probiert?',
-  'Leider nein. Chrigu ist enttäuscht.',
+  'Leider nein. Chrigu glaubt trotzdem an dich.',
 ];
 let riddle = null;
 let fails = 0;
@@ -123,7 +123,7 @@ function unlockSignup() {
 // ---------- Formular ----------
 const form = $('#signup-form');
 const f = form.elements;
-const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Ganze Delegation?!', 'Ein Fussball-Team (Hallen).', 'Ein ganzer Car?! Wir brauchen mehr Bier.'];
+const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Viererbande.', 'Fast schon ein Verein.', 'Ganze Delegation?!'];
 
 function syncCompanions() {
   const n = Number(f.companions.value);
