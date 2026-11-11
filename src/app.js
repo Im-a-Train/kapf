@@ -57,7 +57,7 @@ export function createApp({ event, riddles, store, planning, secret, adminPasswo
     }
     const input = await body(req);
     if (!auth.verifyRiddleToken(input.riddleToken)) {
-      return json(res, 403, { code: 'RIDDLE', errors: ['Zuerst das Rätsel lösen, du Schlaumeier.'] });
+      return json(res, 403, { code: 'RIDDLE', errors: ['Zuerst noch kurz das Rätsel lösen, dann klappt’s.'] });
     }
     const { data, errors } = validateRegistration(input, event, { requireParts: true });
     if (errors.length) return json(res, 400, { errors });
