@@ -44,7 +44,7 @@ function renderPlan() {
     btn.addEventListener('click', () => dispatchEvent(new CustomEvent('kapf:phase', { detail: p.id })));
     return li;
   }));
-  $('#parts-list').replaceChildren(...event.plan.map((p) => {
+  $('#parts-list').replaceChildren(...event.plan.filter((p) => p.signup !== false).map((p) => {
     const label = document.createElement('label');
     label.className = 'check';
     const box = document.createElement('input');
@@ -137,8 +137,9 @@ form.addEventListener('change', () => {
   const no = f.attending.value === 'no';
   $('#companions-label').hidden = no;
   $('#sleepover-label').hidden = no;
+  $('#car-label').hidden = no;
   $('#parts-fieldset').hidden = no;
-  if (no) f.sleepover.checked = false;
+  if (no) { f.sleepover.checked = false; f.car.checked = false; }
   if (no) { f.companions.value = 0; syncCompanions(); }
 });
 
@@ -185,7 +186,7 @@ form.addEventListener('submit', async (e) => {
     $('#done-cal').hidden = data.attending !== 'yes';
     $('#done-love').hidden = data.attending !== 'yes';
     if (data.attending === 'yes') {
-      dispatchEvent(new CustomEvent('kapf:registered', { detail: { name: body.name, plus: Number(body.companions) || 0 } }));
+      dispatchEvent(new CustomEvent('kapf:registered', { detail: { name: body.name, plus: Number(body.companions) || 0, parts: body.parts } }));
     }
     $('#done').scrollIntoView({ behavior: 'smooth' });
     confetti(300);

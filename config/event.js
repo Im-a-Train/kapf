@@ -14,9 +14,10 @@ export const event = {
   maxCompanions: 5,
   // Grober Plan (Kachel auf der Seite + Checkboxen bei der Anmeldung).
   // `id` wird gespeichert – nicht mehr ändern, wenn schon Anmeldungen da sind.
+  // `signup: false` = steht im Plan, aber man muss sich dafür nicht anmelden.
   plan: [
     { id: 'vormittag', when: 'Vormittag', what: 'Brunch', emoji: '🥐' },
-    { id: 'nachmittag', when: 'Nachmittag', what: 'Spiel und Spass', emoji: '🎯' },
+    { id: 'nachmittag', when: 'Nachmittag', what: 'Spiel und Spass', emoji: '🎯', signup: false },
     { id: 'abend', when: 'Abend', what: "Z'Nacht und plaudern", emoji: '🍝' },
     { id: 'nacht', when: 'Nacht', what: 'Schwoofe und Fiire', emoji: '🔥' },
   ],

@@ -65,13 +65,13 @@ export function createApp({ event, riddles, store, planning, secret, adminPasswo
     return json(res, 201, { id: created.id, name: created.name, attending: created.attending });
   });
 
-  // Wer kommt? Für die Party-Kachel. Bewusst ohne Namen, nur die Anzahl Begleitung,
-  // in der Reihenfolge der Anmeldung (so füllt sich die Party).
+  // Wer kommt? Für die Party-Kachel. Bewusst ohne Namen, nur die Anzahl Begleitung und
+  // die Zeitfenster, in der Reihenfolge der Anmeldung (so füllt sich die Party).
   route('GET', '/api/party', async ({ res }) => {
     const guests = (await store.list())
       .filter((r) => r.attending === 'yes')
       .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))
-      .map((r) => ({ plus: r.companions || 0 }));
+      .map((r) => ({ plus: r.companions || 0, parts: r.parts ?? [] }));
     return json(res, 200, { hosts: event.hosts, guests });
   });
 
