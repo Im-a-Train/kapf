@@ -5,6 +5,19 @@ Anmeldeseite für den 30. Geburtstag von **Tim, Röbu, Chrigu & Melu**
 
 Bad UI mit Absicht (inspiriert von [glunz.ch](https://glunz.ch)). Anmelden kann nur, wer ein Rätsel löst.
 Dazu gibt es ein kleines Admin-UI unter `/admin` und die Planung der vier Gastgeber unter `/admin/planung/`
+
+### Zwei Einladungen, zwei Links
+
+| URL       | Für wen              | Plan                                |
+|-----------|----------------------|-------------------------------------|
+| `/brunch` | Familien und Freunde | Brunch, Nachmittag                  |
+| `/`       | Freunde              | Nachmittag, Abend, Nacht            |
+
+Beide Seiten nutzen dasselbe Formular. Gespeichert wird, über welchen Link sich jemand
+angemeldet hat (`invite`). Über den Brunch-Link sind grössere Gruppen erlaubt und nur die
+Plan-Punkte dieser Einladung wählbar. Untertitel, Zeiten, Ankunft, Kalenderdatei und
+Countdown kommen ebenfalls aus `config/event.js` unter `invites`.
+Im Admin gibt es dafür eine eigene Spalte und einen Filter.
 (Aufgaben, Budget, Abrechnung; nur mit Admin-Login).
 
 Extras:

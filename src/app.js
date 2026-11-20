@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { createAuth } from './auth.js';
 import { createRiddles } from './riddles.js';
-import { toCsv, validateRegistration } from './registration.js';
+import { eventForInvite, toCsv, validateRegistration } from './registration.js';
 import { toIcs } from './calendar.js';
 
 const PUBLIC_DIR = resolve(fileURLToPath(new URL('../public', import.meta.url)));
@@ -33,14 +33,21 @@ export function createApp({ event, riddles, store, planning, secret, adminPasswo
     auth.verifyAdminToken(ctx.cookies.admin) ? handler(ctx) : json(ctx.res, 401, { error: 'Nicht eingeloggt' });
 
   // --- Öffentlich -------------------------------------------------------
-  route('GET', '/api/event', ({ res }) => json(res, 200, event));
+  // ?path=/brunch (oder ?invite=brunch) liefert das Event aus Sicht dieser Einladung (Texte, Zeiten, Plan)
+  const inviteByPath = (path) => Object.keys(event.invites ?? {})
+    .find((k) => event.invites[k].path.replace(/\/$/, '') === String(path).replace(/\/$/, ''));
+  route('GET', '/api/event', ({ res, url }) => {
+    const q = url.searchParams;
+    if (!q.has('invite') && !q.has('path')) return json(res, 200, event);
+    return json(res, 200, eventForInvite(event, q.get('invite') ?? inviteByPath(q.get('path'))));
+  });
 
-  route('GET', '/api/event.ics', ({ res }) => {
+  route('GET', '/api/event.ics', ({ res, url }) => {
     res.writeHead(200, {
       'Content-Type': 'text/calendar; charset=utf-8',
       'Content-Disposition': 'attachment; filename="kapf-4x30.ics"',
     });
-    res.end(toIcs(event));
+    res.end(toIcs(eventForInvite(event, url.searchParams.get('invite'))));
   });
 
   route('GET', '/api/riddle', ({ res, url }) => json(res, 200, riddleSet.random(url.searchParams.get('not'))));
@@ -59,7 +66,8 @@ export function createApp({ event, riddles, store, planning, secret, adminPasswo
     if (!auth.verifyRiddleToken(input.riddleToken)) {
       return json(res, 403, { code: 'RIDDLE', errors: ['Zuerst noch kurz das Rätsel lösen, dann klappt’s.'] });
     }
-    const { data, errors } = validateRegistration(input, event, { requireParts: true });
+    // Öffentlich: nur die Plan-Punkte und die Gruppengrösse der eigenen Einladung
+    const { data, errors } = validateRegistration(input, eventForInvite(event, input.invite), { requireParts: true });
     if (errors.length) return json(res, 400, { errors });
     const created = await store.create({ ...data, note: '' });
     return json(res, 201, { id: created.id, name: created.name, attending: created.attending });
@@ -106,7 +114,9 @@ export function createApp({ event, riddles, store, planning, secret, adminPasswo
     const existing = await store.get(params.id);
     if (!existing) return json(res, 404, { error: 'Nicht gefunden' });
     const input = await body(req);
-    const { data, errors } = validateRegistration({ ...existing, ...input }, event);
+    // Admin: Gruppengrösse der Einladung, aber alle Plan-Punkte erlaubt (alte Anmeldungen behalten ihre Zeiten)
+    const merged = { ...existing, ...input };
+    const { data, errors } = validateRegistration(merged, { ...eventForInvite(event, merged.invite), plan: event.plan });
     if (errors.length) return json(res, 400, { errors });
     const note = String(input.note ?? existing.note ?? '').slice(0, 1000);
     return json(res, 200, await store.update(params.id, { ...data, note }));
@@ -140,7 +150,9 @@ export function createApp({ event, riddles, store, planning, secret, adminPasswo
       }
       if (url.pathname.startsWith('/api/')) return json(res, 404, { error: 'Unbekannt' });
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'Nope' });
-      return await serveStatic(url.pathname, res);
+      // Einladungs-URLs (z. B. /brunch) zeigen dieselbe Seite, das Frontend wählt den Text.
+      const pathname = inviteByPath(url.pathname) ? '/' : url.pathname;
+      return await serveStatic(pathname, res);
     } catch (err) {
       if (err.status) return json(res, err.status, { error: err.message });
       console.error(err);

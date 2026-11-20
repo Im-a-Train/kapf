@@ -21,6 +21,26 @@ export const event = {
     { id: 'abend', when: 'Abend', what: "Z'Nacht und plaudern", emoji: '🍝' },
     { id: 'nacht', when: 'Nacht', what: 'Schwoofe und Fiire', emoji: '🔥' },
   ],
+  // Zwei Einladungen mit eigener URL. Den Familien schickt ihr /brunch, den Freunden /.
+  // Alles hier überschreibt die Werte oben, `plan` wählt die Plan-Punkte (ids) dieser Einladung.
+  // Zeiten sind noch nicht definitiv.
+  invites: {
+    fest: {
+      path: '/',
+      time: 'vom Nachmittag bis id Nacht', // TODO: genaue Zeiten festlegen
+      plan: ['nachmittag', 'abend', 'nacht'],
+    },
+    brunch: {
+      path: '/brunch',
+      subtitle: 'Brunch mit Familie und Freunden. Kinder ausdrücklich erwünscht.',
+      intro: 'Am Samstagmorgen laden wir unsere Familien und Freunde zum Brunch im Kapf ein: Zopf, Kaffee, Rührei, so viel es braucht. Danach lassen wir den Nachmittag gemütlich zusammen ausklingen. Kommt, wann es euch passt, und bleibt, solange ihr mögt.',
+      time: 'Brunch und Nachmittag', // TODO: genaue Zeiten festlegen
+      plan: ['vormittag', 'nachmittag'],
+      arriveBy: '10:30', // TODO
+      maxCompanions: 8, // Familien sind grösser
+      calendar: { start: '2027-05-22T10:30', end: '2027-05-22T17:00' }, // TODO
+    },
+  },
   // Für die Kalenderdatei (/api/event.ics), Ortszeit Schweiz
   calendar: { start: '2027-05-22T16:00', end: '2027-05-23T02:00', url: 'https://kapf.24eranker.dedyn.io' },
 

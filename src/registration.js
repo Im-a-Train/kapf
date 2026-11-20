@@ -1,13 +1,33 @@
 // Validierung einer Anmeldung. Neues Feld? Hier ergänzen + im Formular einbauen.
 export const SPONTAN = 'spontan';
 
-export function validateRegistration(input, { maxCompanions, plan = [] }, { requireParts = false } = {}) {
+// Welche Einladung? Unbekannt oder leer (z. B. alte Anmeldungen) = das Fest.
+export function resolveInvite(name, { invites = {} } = {}) {
+  return Object.hasOwn(invites, name) ? name : 'fest';
+}
+
+// Das Event aus Sicht einer Einladung: ihre Werte überschreiben die allgemeinen,
+// der Plan enthält nur ihre Punkte.
+export function eventForInvite(event, name) {
+  const invite = resolveInvite(name, event);
+  const { path, plan: ids, calendar, ...overrides } = event.invites?.[invite] ?? {};
+  return {
+    ...event,
+    ...overrides,
+    invite,
+    plan: ids ? (event.plan ?? []).filter((p) => ids.includes(p.id)) : event.plan,
+    calendar: { ...event.calendar, ...calendar },
+  };
+}
+
+export function validateRegistration(input, { maxCompanions, plan = [], invites }, { requireParts = false } = {}) {
   const errors = [];
   const str = (v, max) => String(v ?? '').trim().slice(0, max);
 
   const data = {
     name: str(input.name, 100),
     email: str(input.email, 200),
+    invite: resolveInvite(input.invite, { invites }),
     attending: input.attending === 'yes' ? 'yes' : input.attending === 'no' ? 'no' : null,
     companions: Number.parseInt(input.companions ?? 0, 10),
     companionNames: str(input.companionNames, 300),
@@ -43,7 +63,7 @@ function parseParts(value, plan) {
   return plan.filter((p) => p.signup !== false).map((p) => p.id).filter((id) => list.includes(id));
 }
 
-export const CSV_COLUMNS = ['createdAt', 'name', 'email', 'attending', 'companions', 'companionNames', 'parts', 'sleepover', 'car', 'diet', 'message', 'note'];
+export const CSV_COLUMNS = ['createdAt', 'invite', 'name', 'email', 'attending', 'companions', 'companionNames', 'parts', 'sleepover', 'car', 'diet', 'message', 'note'];
 
 export function toCsv(rows) {
   const esc = (v) => {

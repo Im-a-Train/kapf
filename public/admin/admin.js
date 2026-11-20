@@ -39,7 +39,7 @@ function render() {
   const q = $('#search').value.toLowerCase();
   const filter = $('#filter').value;
   const list = registrations.filter((r) =>
-    (!filter || r.attending === filter) &&
+    (!filter || r.attending === filter || (r.invite ?? 'fest') === filter) &&
     (!q || [r.name, r.email, r.companionNames, r.diet, r.message, r.note].join(' ').toLowerCase().includes(q)));
 
   const yes = registrations.filter((r) => r.attending === 'yes');
@@ -48,6 +48,7 @@ function render() {
     ['Zusagen', yes.length],
     ['Personen total', yes.reduce((n, r) => n + 1 + (r.companions || 0), 0)],
     ['Absagen', registrations.length - yes.length],
+    ['🥐 Über Brunch-Link (Pers.)', yes.filter((r) => r.invite === 'brunch').reduce((n, r) => n + 1 + (r.companions || 0), 0)],
     ['Übernachten (Pers.)', yes.filter((r) => r.sleepover === 'yes').reduce((n, r) => n + 1 + (r.companions || 0), 0)],
     ['🚗 Autos', yes.filter((r) => r.car === 'yes').length],
     ['Mit Essenswunsch', yes.filter((r) => r.diet).length],
@@ -58,6 +59,7 @@ function render() {
 
   $('#rows').replaceChildren(...list.map((r) => el('tr', { class: r.attending },
     el('td', {}, el('strong', {}, r.name), r.email ? el('div', { class: 'muted' }, r.email) : ''),
+    el('td', {}, el('span', { class: `badge invite-${r.invite ?? 'fest'}` }, r.invite === 'brunch' ? '🥐 Brunch' : '🔥 Fest')),
     el('td', {}, el('span', { class: `badge ${r.attending}` }, r.attending === 'yes' ? 'Ja' : 'Nein')),
     el('td', {}, r.companions || ''),
     el('td', { class: 'wrap' }, r.companionNames),
@@ -93,6 +95,7 @@ function edit(r) {
   for (const k of ['name', 'email', 'attending', 'companions', 'companionNames', 'diet', 'message', 'note']) f[k].value = r[k] ?? '';
   f.sleepover.value = r.sleepover === 'yes' ? 'yes' : 'no';
   f.car.value = r.car === 'yes' ? 'yes' : 'no';
+  f.invite.value = r.invite === 'brunch' ? 'brunch' : 'fest';
   $('#edit-error').textContent = '';
   $('#edit').showModal();
 }
