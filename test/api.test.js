@@ -167,3 +167,54 @@ test('Spontan schliesst die anderen Zeitfenster aus, mehr als 5 Begleitpersonen 
   const no = await call('/api/registrations', { method: 'POST', body: { riddleToken: token, name: 'Vreni', attending: 'no' } });
   assert.equal(no.status, 201, 'Absage braucht kein Zeitfenster');
 });
+
+test('Zwei Einladungen: /brunch für Familien, / für das Fest', async () => {
+  const page = await fetch(`${base}/brunch`);
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /Kapf/);
+
+  const { data: brunch } = await call('/api/event?path=/brunch');
+  assert.equal(brunch.invite, 'brunch');
+  assert.deepEqual(brunch.plan.map((p) => p.id), ['vormittag', 'nachmittag']);
+  const { data: fest } = await call('/api/event?path=/');
+  assert.equal(fest.invite, 'fest');
+  assert.deepEqual(fest.plan.map((p) => p.id), ['nachmittag', 'abend', 'nacht']);
+  assert.equal((await call('/api/event')).data.plan.length, 4, 'ohne Einladung: ganzer Plan');
+
+  const ics = await (await fetch(`${base}/api/event.ics?invite=brunch`)).text();
+  assert.match(ics, /DTSTART;TZID=Europe\/Zurich:20270522T103000/);
+
+  const { data: { token } } = await call('/api/riddle/solve', { method: 'POST', body: { id: 'alter', answer: '120' } });
+  // Über den Brunch-Link: Nacht gibt es nicht, dafür grössere Familien
+  const grosi = await call('/api/registrations', {
+    method: 'POST',
+    body: { riddleToken: token, invite: 'brunch', name: 'Grosi', attending: 'yes', companions: 7, parts: ['vormittag', 'nacht'] },
+  });
+  assert.equal(grosi.status, 201);
+  const onlyNight = await call('/api/registrations', {
+    method: 'POST',
+    body: { riddleToken: token, invite: 'brunch', name: 'Nachteule', attending: 'yes', parts: ['nacht'] },
+  });
+  assert.equal(onlyNight.status, 400);
+  // Über den Fest-Link: kein Brunch
+  const kollege = await call('/api/registrations', {
+    method: 'POST',
+    body: { riddleToken: token, invite: 'quatsch', name: 'Kollege', attending: 'yes', parts: ['vormittag', 'abend'] },
+  });
+  assert.equal(kollege.status, 201);
+
+  const login = await call('/api/admin/login', { method: 'POST', body: { password: 'geheim' } });
+  const cookie = login.res.headers.get('set-cookie').split(';')[0];
+  const list = (await call('/api/admin/registrations', { cookie })).data;
+  const g = list.find((r) => r.name === 'Grosi');
+  const k = list.find((r) => r.name === 'Kollege');
+  assert.equal(g.invite, 'brunch');
+  assert.deepEqual(g.parts, ['vormittag']);
+  assert.equal(k.invite, 'fest');
+  assert.deepEqual(k.parts, ['abend']);
+
+  // Admin darf die Familie mit 7 Begleitpersonen bearbeiten, ohne dass die Grösse scheitert
+  const edited = await call(`/api/admin/registrations/${g.id}`, { method: 'PATCH', cookie, body: { note: 'bringt Zopf' } });
+  assert.equal(edited.status, 200);
+  assert.equal(edited.data.companions, 7);
+});

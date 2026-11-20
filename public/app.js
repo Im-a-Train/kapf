@@ -1,4 +1,5 @@
 import { isParty } from './party.js';
+import { eventUrl } from './invite.js';
 
 const $ = (sel) => document.querySelector(sel);
 const api = async (path, opts = {}) => {
@@ -16,8 +17,17 @@ const store = {
 
 // ---------- Event-Infos ----------
 let event = { maxCompanions: 5, date: '2027-05-22', plan: [] };
-api('/api/event').then(({ data }) => {
+api(eventUrl).then(({ data }) => {
   event = { ...event, ...data };
+  // Einladung (/ oder /brunch): Formular, Kalender und Begrüssung anpassen
+  $('#signup-form').elements.invite.value = event.invite ?? 'fest';
+  $('#done-cal a').href = `/api/event.ics?invite=${encodeURIComponent(event.invite ?? 'fest')}`;
+  $('#intro').textContent = event.intro ?? '';
+  $('#intro').hidden = !event.intro;
+  if (event.invite === 'brunch') {
+    document.title = `Brunch · ${document.title}`;
+    $('#marquee-text').textContent = `+++ BRUNCH +++ TIM +++ RÖBU +++ CHRIGU +++ MELU +++ 30 +++ KAPF +++ ${event.dateLabel.toUpperCase()} +++ KINDER WILLKOMMEN +++`;
+  }
   $('#title').textContent = event.title;
   splitTitle();
   $('#subtitle').textContent = event.subtitle;
@@ -27,6 +37,7 @@ api('/api/event').then(({ data }) => {
   $('#hosts').textContent = event.hosts.join(' · ');
   $('#signup-form').elements.companions.max = event.maxCompanions;
   renderPlan();
+  tick();
 });
 
 // ---------- Grober Plan + Checkboxen «Wenn bisch derbii?» ----------
@@ -57,8 +68,10 @@ function renderPlan() {
 }
 
 // ---------- Countdown ----------
+// Zählt bis zum Start der Einladung (Brunch am Morgen, Fest am Nachmittag)
 function tick() {
-  const secs = Math.max(0, Math.floor((new Date(`${event.date}T16:00:00`) - Date.now()) / 1000));
+  const start = event.calendar?.start ?? `${event.date}T16:00`;
+  const secs = Math.max(0, Math.floor((new Date(`${start}:00`) - Date.now()) / 1000));
   $('#countdown').textContent = secs.toLocaleString('de-CH');
 }
 tick();

@@ -102,6 +102,7 @@
     <!-- Grober Plan (aus config/event.js, via app.js) -->
     <section id="plan" class="box plan">
       <h2><span class="blink">▶</span> Dr grob Plan</h2>
+      <p id="intro" hidden></p>
       <ol id="plan-list" class="plan-list"></ol>
       <p class="small">Chunnsch, wenn's dir passt. Bi der Aamäldig chasch aachrüzle, wenn de ungefähr da bisch. Klick uf e Zyt, de gsehsch se unde im Bild.</p>
     </section>
@@ -127,6 +128,7 @@
     <section id="signup" class="box" hidden>
       <h2><span class="blink">▶</span> Schritt 2: Anmelden</h2>
       <form id="signup-form" novalidate>
+        <input type="hidden" name="invite" value="fest">
         <label>Wie heisst du? <small>(richtiger Name, nicht «Dä vo letscht Mal»)</small>
           <input name="name" maxlength="100" required>
         </label>

@@ -1,3 +1,4 @@
+import { eventUrl } from './invite.js';
 // Anfahrt: klappt hinter «WO» auf.
 // ÖV-Verbindungen von der Fahrplan-API von search.ch (SBB-Fahrplandaten),
 // GPX-Routen von BRouter, Karte von swisstopo. Alle erlauben Aufrufe direkt aus dem Browser (CORS).
@@ -17,7 +18,7 @@ let origin = null;
 // «Ankunft spätestens»: einstellbar, Standard aus config/event.js (16:00)
 let arriveBy = '16:00';
 
-const eventReady = fetch('/api/event').then((r) => r.json()).then((data) => {
+const eventReady = fetch(eventUrl).then((r) => r.json()).then((data) => {
   event = data;
   $('#coords-label').textContent = event.coordsLabel;
   $('#stop-name').textContent = event.stop.name;

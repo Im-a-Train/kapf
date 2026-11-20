@@ -43,3 +43,4 @@ dialog h2 { margin-top: 0; }
 dialog label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 13px; }
 dialog label > * { margin-top: 3px; font-weight: normal; font-size: 15px; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
+.badge.invite-brunch { background: #fde9b8; } .badge.invite-fest { background: #e3d7fb; }

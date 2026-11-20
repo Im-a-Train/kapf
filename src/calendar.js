@@ -55,7 +55,7 @@ export function toIcs(event, now = new Date()) {
     'METHOD:PUBLISH',
     ...TZ.split('\n'),
     'BEGIN:VEVENT',
-    `UID:kapf-4x30-${event.date}@kapf.24eranker.dedyn.io`,
+    `UID:kapf-4x30-${event.date}${event.invite && event.invite !== 'fest' ? `-${event.invite}` : ''}@kapf.24eranker.dedyn.io`,
     `DTSTAMP:${stamp}`,
     `DTSTART;TZID=Europe/Zurich:${local(cal.start)}`,
     `DTEND;TZID=Europe/Zurich:${local(cal.end)}`,
