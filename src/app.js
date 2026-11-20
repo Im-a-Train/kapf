@@ -53,7 +53,7 @@ export function createApp({ event, riddles, store, secret, adminPassword }) {
     const { data, errors } = validateRegistration(input, event);
     if (errors.length) return json(res, 400, { errors });
     const created = await store.create({ ...data, note: '' });
-    return json(res, 201, { id: created.id, name: created.name, attending: created.attending });
+    return json(res, 201, { id: created.id, name: created.name, attending: created.attending, parts: created.parts });
   });
 
   // --- Admin ------------------------------------------------------------
@@ -110,7 +110,10 @@ export function createApp({ event, riddles, store, secret, adminPassword }) {
       }
       if (url.pathname.startsWith('/api/')) return json(res, 404, { error: 'Unbekannt' });
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'Nope' });
-      return await serveStatic(url.pathname, res);
+      // Einladungs-URLs (z. B. /brunch) zeigen dieselbe Seite, das Frontend wählt den Text.
+      const invitePaths = Object.values(event.invites ?? {}).map((i) => i.path.replace(/\/$/, ''));
+      const pathname = invitePaths.includes(url.pathname.replace(/\/$/, '')) ? '/' : url.pathname;
+      return await serveStatic(pathname, res);
     } catch (err) {
       if (err.status) return json(res, err.status, { error: err.message });
       console.error(err);

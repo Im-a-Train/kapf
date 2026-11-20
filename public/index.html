@@ -39,6 +39,13 @@
       <div class="fact countdown tilt-r"><span>NOCH</span><strong id="countdown">…</strong><em>Sekunden (ungefähr)</em></div>
     </section>
 
+    <!-- Programm: je nach Einladung (/ oder /brunch) andere Teile -->
+    <section id="program" class="box program" hidden>
+      <h2><span class="blink">▶</span> <span id="program-title">Programm</span></h2>
+      <p id="intro"></p>
+      <ul id="program-list" class="program-list"></ul>
+    </section>
+
     <!-- Schritt 1: Rätsel -->
     <section id="riddle" class="box">
       <h2><span class="blink">▶</span> Schritt 1: Beweise, dass du würdig bist</h2>
@@ -60,6 +67,7 @@
     <section id="signup" class="box" hidden>
       <h2><span class="blink">▶</span> Schritt 2: Anmelden</h2>
       <form id="signup-form" novalidate>
+        <input type="hidden" name="invite" value="fest">
         <label>Wie heisst du? <small>(richtiger Name, nicht «Dä vo letscht Mal»)</small>
           <input name="name" maxlength="100" required>
         </label>
@@ -72,6 +80,11 @@
           <legend>Kommst du?</legend>
           <label class="radio"><input type="radio" name="attending" value="yes"> JA, logisch!</label>
           <label class="radio"><input type="radio" name="attending" value="no"> Nein <small>(wir sind nicht beleidigt)</small> <small>(doch)</small></label>
+        </fieldset>
+
+        <fieldset class="attending" id="parts-fieldset" hidden>
+          <legend>Wann bist du dabei?</legend>
+          <div id="parts-options"></div>
         </fieldset>
 
         <label id="companions-label">Wie viele Personen bringst du mit? <strong id="companions-out">0</strong>

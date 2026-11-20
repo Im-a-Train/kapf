@@ -11,6 +11,11 @@ const api = async (path, method = 'GET', body) => {
 };
 
 let registrations = [];
+let event = { parts: {}, invites: {} };
+const partLabel = (p) => event.parts?.[p]?.label ?? p;
+const inviteOf = (r) => (r.invite in (event.invites ?? {}) ? r.invite : 'fest');
+// Alte Anmeldungen ohne Teile: alle Teile ihrer Einladung
+const partsOf = (r) => r.parts ?? event.invites?.[inviteOf(r)]?.parts ?? [];
 
 function showLogin() {
   $('#login').hidden = false;
@@ -19,6 +24,8 @@ function showLogin() {
 }
 
 async function load() {
+  const ev = await api('/api/event');
+  if (ev.ok) event = ev.data;
   const { ok, data } = await api('/api/admin/registrations');
   if (!ok) return;
   registrations = data;
@@ -32,7 +39,7 @@ function render() {
   const q = $('#search').value.toLowerCase();
   const filter = $('#filter').value;
   const list = registrations.filter((r) =>
-    (!filter || r.attending === filter) &&
+    (!filter || r.attending === filter || inviteOf(r) === filter) &&
     (!q || [r.name, r.email, r.companionNames, r.diet, r.message, r.note].join(' ').toLowerCase().includes(q)));
 
   const yes = registrations.filter((r) => r.attending === 'yes');
@@ -40,6 +47,10 @@ function render() {
     ['Anmeldungen', registrations.length],
     ['Zusagen', yes.length],
     ['Personen total', yes.reduce((n, r) => n + 1 + (r.companions || 0), 0)],
+    ...Object.keys(event.parts ?? {}).map((p) => [
+      `Personen ${partLabel(p)}`,
+      yes.filter((r) => partsOf(r).includes(p)).reduce((n, r) => n + 1 + (r.companions || 0), 0),
+    ]),
     ['Absagen', registrations.length - yes.length],
     ['Mit Essenswunsch', yes.filter((r) => r.diet).length],
   ];
@@ -47,7 +58,9 @@ function render() {
 
   $('#rows').replaceChildren(...list.map((r) => el('tr', { class: r.attending },
     el('td', {}, el('strong', {}, r.name), r.email ? el('div', { class: 'muted' }, r.email) : ''),
+    el('td', {}, el('span', { class: `badge invite-${inviteOf(r)}` }, inviteOf(r) === 'brunch' ? 'Brunch-Link' : 'Fest-Link')),
     el('td', {}, el('span', { class: `badge ${r.attending}` }, r.attending === 'yes' ? 'Ja' : 'Nein')),
+    el('td', { class: 'wrap' }, r.attending === 'yes' ? partsOf(r).map(partLabel).join(', ') : ''),
     el('td', {}, r.companions || ''),
     el('td', { class: 'wrap' }, r.companionNames),
     el('td', { class: 'wrap' }, r.diet),
@@ -77,18 +90,31 @@ function edit(r) {
   editing = r;
   const f = $('#edit-form').elements;
   for (const k of ['name', 'email', 'attending', 'companions', 'companionNames', 'diet', 'message', 'note']) f[k].value = r[k] ?? '';
+  f.invite.value = inviteOf(r);
+  renderPartBoxes(partsOf(r));
   $('#edit-error').textContent = '';
   $('#edit').showModal();
 }
 
 $('#save').addEventListener('click', async (e) => {
   e.preventDefault();
-  const body = Object.fromEntries(new FormData($('#edit-form')));
+  const fd = new FormData($('#edit-form'));
+  const body = Object.fromEntries(fd);
+  body.parts = fd.getAll('parts');
   const { ok, data } = await api(`/api/admin/registrations/${editing.id}`, 'PATCH', body);
   if (!ok) { $('#edit-error').textContent = (data.errors ?? [data.error]).join(' '); return; }
   $('#edit').close();
   load();
 });
+
+// Checkboxen für die Teile der gewählten Einladung
+function renderPartBoxes(checked) {
+  const invite = $('#edit-form').elements.invite.value;
+  const parts = event.invites?.[invite]?.parts ?? [];
+  $('#edit-parts').replaceChildren(...parts.map((p) =>
+    el('label', { class: 'inline' }, el('input', { type: 'checkbox', name: 'parts', value: p, ...(checked.includes(p) ? { checked: '' } : {}) }), ' ', partLabel(p))));
+}
+$('#edit-form').elements.invite.addEventListener('change', (e) => renderPartBoxes(event.invites?.[e.target.value]?.parts ?? []));
 
 async function remove(r) {
   if (!confirm(`Anmeldung von «${r.name}» wirklich löschen?`)) return;

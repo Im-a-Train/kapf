@@ -40,3 +40,7 @@ dialog h2 { margin-top: 0; }
 dialog label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 13px; }
 dialog label > * { margin-top: 3px; font-weight: normal; font-size: 15px; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
+.badge.invite-brunch { background: #fde9b8; } .badge.invite-fest { background: #e3d7fb; }
+dialog fieldset.parts { border: 1px solid #ccc; border-radius: 6px; margin: 0 0 10px; padding: 6px 10px; font-size: 13px; }
+dialog label.inline { display: inline-block; margin: 0 14px 0 0; font-weight: normal; }
+dialog label.inline > input { width: auto; display: inline; margin: 0 4px 0 0; vertical-align: middle; }

@@ -13,22 +13,67 @@ const store = {
 };
 
 // ---------- Event-Infos ----------
-let event = { maxCompanions: 3, date: '2027-05-22' };
+// Welche Einladung? /brunch → Familien-Version, sonst das Fest.
+const path = location.pathname.replace(/\/$/, '') || '/';
+let inviteName = 'fest';
+let invite = { parts: [] };
+let event = { maxCompanions: 3, date: '2027-05-22', parts: {} };
+
 api('/api/event').then(({ data }) => {
   event = { ...event, ...data };
+  inviteName = Object.keys(event.invites ?? {}).find((k) => event.invites[k].path === path) ?? 'fest';
+  invite = event.invites?.[inviteName] ?? { parts: [] };
+  const parts = invite.parts.map((id) => ({ id, ...event.parts[id] }));
+
   $('#title').textContent = event.title;
   splitTitle();
-  $('#subtitle').textContent = event.subtitle;
+  $('#subtitle').textContent = invite.subtitle ?? event.subtitle;
   $('#date').textContent = event.dateLabel;
-  $('#time').textContent = event.time ?? '';
+  $('#time').textContent = parts.length ? `ab ${parts[0].time}` : (event.time ?? '');
   $('#location').textContent = event.location;
   $('#hosts').textContent = event.hosts.join(' · ');
-  $('#signup-form').elements.companions.max = event.maxCompanions;
+  if (inviteName === 'brunch') document.title = `Brunch · ${document.title}`;
+  $('#marquee-text').textContent = `+++ ${[...event.hosts, '30', ...parts.map((p) => p.label), event.location, event.dateLabel].map((t) => t.toUpperCase()).join(' +++ ')} +++ BITTE NICHT VERGESSEN +++`;
+
+  // Programm
+  if (parts.length) {
+    $('#program-title').textContent = inviteName === 'brunch' ? 'Brunch & Nachmittag' : 'Nachmittag & Nacht';
+    $('#intro').textContent = invite.intro ?? '';
+    $('#program-list').replaceChildren(...parts.map((p) => {
+      const li = document.createElement('li');
+      const b = document.createElement('b');
+      b.textContent = `ab ${p.time}`;
+      const strong = document.createElement('strong');
+      strong.textContent = `${p.emoji ?? ''} ${p.label}`.trim();
+      li.append(b, strong);
+      return li;
+    }));
+    $('#program').hidden = false;
+  }
+
+  // Formular: Einladung merken, Teile zur Auswahl anbieten (nur wenn es etwas zu wählen gibt)
+  f.invite.value = inviteName;
+  f.companions.max = invite.maxCompanions ?? event.maxCompanions;
+  $('#parts-options').replaceChildren(...parts.map((p) => {
+    const label = document.createElement('label');
+    label.className = 'radio';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.name = 'parts';
+    input.value = p.id;
+    input.checked = true;
+    label.append(input, ` ${p.emoji ?? ''} ${p.label} (ab ${p.time})`);
+    return label;
+  }));
+  syncAttending();
+  syncCompanions();
 });
 
 // ---------- Countdown ----------
+// Zählt bis zum Start des ersten Programmteils dieser Einladung.
 function tick() {
-  const secs = Math.max(0, Math.floor((new Date(`${event.date}T16:00:00`) - Date.now()) / 1000));
+  const start = event.parts?.[invite.parts?.[0]]?.time ?? '16:00';
+  const secs = Math.max(0, Math.floor((new Date(`${event.date}T${start}:00`) - Date.now()) / 1000));
   $('#countdown').textContent = secs.toLocaleString('de-CH');
 }
 tick();
@@ -93,7 +138,7 @@ function unlockSignup() {
 // ---------- Formular ----------
 const form = $('#signup-form');
 const f = form.elements;
-const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Ganze Delegation?!'];
+const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Ganze Delegation?!', 'Halbe Fussballmannschaft.', 'Wir brauchen mehr Zopf.', 'Ganzer Familienclan! 🥐'];
 
 function syncCompanions() {
   const n = Number(f.companions.value);
@@ -103,11 +148,14 @@ function syncCompanions() {
 }
 f.companions.addEventListener('input', syncCompanions);
 
-form.addEventListener('change', () => {
+function syncAttending() {
   const no = f.attending.value === 'no';
   $('#companions-label').hidden = no;
+  // Auswahl der Teile nur, wenn man zusagt und die Einladung mehrere Teile hat
+  $('#parts-fieldset').hidden = no || (invite.parts?.length ?? 0) < 2;
   if (no) { f.companions.value = 0; syncCompanions(); }
-});
+}
+form.addEventListener('change', syncAttending);
 
 // Der Knopf flieht ein paar Mal (nur mit Maus). Tastatur & Touch funktionieren immer.
 const btn = $('#submit-btn');
@@ -127,7 +175,9 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const errs = $('#signup-errors');
   errs.innerHTML = '';
-  const body = Object.fromEntries(new FormData(form));
+  const fd = new FormData(form);
+  const body = Object.fromEntries(fd);
+  body.parts = fd.getAll('parts');
   body.riddleToken = store.get('riddleToken');
   btn.disabled = true;
   const { status, data } = await api('/api/registrations', { method: 'POST', body });
@@ -135,8 +185,9 @@ form.addEventListener('submit', async (e) => {
   if (status === 201) {
     $('#signup').hidden = true;
     $('#done').hidden = false;
+    const when = (data.parts ?? []).map((p) => event.parts?.[p]?.label).filter(Boolean).join(' und ');
     $('#done-text').textContent = data.attending === 'yes'
-      ? `${data.name}, du bist dabei! Wir sehen uns am ${event.dateLabel} im ${event.location}.`
+      ? `${data.name}, du bist dabei${when ? ` (${when})` : ''}! Wir sehen uns am ${event.dateLabel} im ${event.location}.`
       : `Schade, ${data.name}. Wir trinken eins auf dich.`;
     $('#done').scrollIntoView({ behavior: 'smooth' });
     confetti(300);

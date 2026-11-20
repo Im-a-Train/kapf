@@ -83,6 +83,46 @@ test('Ganzer Ablauf: Rätsel → Anmeldung → Admin', async () => {
   assert.equal((await call('/api/admin/registrations', { cookie })).data.length, 0);
 });
 
+test('Brunch-Einladung: eigene URL, eigene Teile', async () => {
+  const page = await fetch(`${base}/brunch`);
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /Kapf/);
+
+  const { data: ev } = await call('/api/event');
+  assert.deepEqual(ev.invites.brunch.parts, ['brunch', 'nachmittag']);
+
+  const solved = await call('/api/riddle/solve', { method: 'POST', body: { id: 'alter', answer: '120' } });
+  const token = solved.data.token;
+
+  // Nacht gehört nicht zur Brunch-Einladung und wird ignoriert
+  const reg = await call('/api/registrations', {
+    method: 'POST',
+    body: { riddleToken: token, invite: 'brunch', name: 'Grosi', attending: 'yes', companions: 5, parts: ['brunch', 'nacht'] },
+  });
+  assert.equal(reg.status, 201);
+  assert.deepEqual(reg.data.parts, ['brunch']);
+
+  // Ohne Auswahl gelten alle Teile der Einladung; unbekannte Einladung = Fest
+  const fest = await call('/api/registrations', {
+    method: 'POST',
+    body: { riddleToken: token, invite: 'quatsch', name: 'Kollege', attending: 'yes' },
+  });
+  assert.deepEqual(fest.data.parts, ['nachmittag', 'nacht']);
+
+  // Beim Fest sind höchstens 3 Begleitpersonen erlaubt, beim Brunch 6
+  const tooMany = await call('/api/registrations', {
+    method: 'POST',
+    body: { riddleToken: token, name: 'Gang', attending: 'yes', companions: 5 },
+  });
+  assert.equal(tooMany.status, 400);
+
+  const none = await call('/api/registrations', {
+    method: 'POST',
+    body: { riddleToken: token, invite: 'brunch', name: 'Unentschlossen', attending: 'yes', parts: [] },
+  });
+  assert.equal(none.status, 400);
+});
+
 test('Statische Dateien & kein Path-Traversal', async () => {
   const res = await fetch(`${base}/`);
   assert.match(await res.text(), /Kapf/);

@@ -6,6 +6,18 @@ Anmeldeseite für den 30. Geburtstag von **Tim, Röbu, Chrigu & Melu**
 Bad UI mit Absicht (inspiriert von [glunz.ch](https://glunz.ch)). Anmelden kann nur, wer ein Rätsel löst.
 Dazu gibt es ein kleines Admin-UI unter `/admin`.
 
+### Zwei Einladungen, zwei Links
+
+| URL       | Für wen               | Programm                |
+|-----------|-----------------------|-------------------------|
+| `/`       | Freunde               | Nachmittag & Nacht      |
+| `/brunch` | Familien und Freunde  | Brunch & Nachmittag     |
+
+Beide Seiten nutzen dasselbe Formular. Gespeichert wird, über welchen Link sich jemand
+angemeldet hat und bei welchen Teilen die Person dabei ist. Im Admin gibt es dafür eine
+eigene Spalte, einen Filter und die Anzahl Personen pro Programmteil.
+Texte, Zeiten und Teile stehen in `config/event.js` unter `parts` und `invites`.
+
 ## Starten
 
 Voraussetzung: Node.js ≥ 20. Es gibt keine Abhängigkeiten, `npm install` ist nicht nötig.

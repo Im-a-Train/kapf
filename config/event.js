@@ -8,10 +8,35 @@ export const event = {
   location: 'Kapf',
   date: '2027-05-22',
   dateLabel: 'Samstag, 22.05.27',
-  time: 'ab 16:00', // TODO: definitiv festlegen
   // Anmeldeschluss (ISO-Datum) – danach nimmt die API keine Anmeldungen mehr an. null = offen.
   registrationDeadline: null,
   maxCompanions: 3,
+
+  // Die Programmteile des Tages. Zeiten sind noch nicht definitiv.
+  parts: {
+    brunch: { label: 'Brunch', time: '10:30', emoji: '🥐' }, // TODO: Zeit festlegen
+    nachmittag: { label: 'Nachmittag', time: '14:00', emoji: '☀️' }, // TODO: Zeit festlegen
+    nacht: { label: 'Abend & Nacht', time: '19:00', emoji: '🌙' }, // TODO: Zeit festlegen
+  },
+
+  // Zwei Einladungen mit eigener URL. Wer über /brunch kommt, sieht die Familien-Version.
+  // `parts` = welche Programmteile diese Einladung zeigt und zur Auswahl stellt.
+  invites: {
+    fest: {
+      path: '/',
+      subtitle: 'Tim, Röbu, Chrigu & Melu werden 30. Zusammen. Im Kapf.',
+      intro: 'Ab dem Nachmittag feiern wir im Kapf, und zwar so lange, wie es geht. Bring gute Laune mit, für den Rest sorgen wir.',
+      parts: ['nachmittag', 'nacht'],
+      maxCompanions: 3,
+    },
+    brunch: {
+      path: '/brunch',
+      subtitle: 'Brunch mit Familie und Freunden. Kinder ausdrücklich erwünscht.',
+      intro: 'Am Samstagmorgen laden wir unsere Familien und Freunde zum Brunch im Kapf ein: Zopf, Kaffee, Rührei, so viel es braucht. Danach lassen wir den Nachmittag gemütlich zusammen ausklingen. Kommt, wann es euch passt, und bleibt, solange ihr mögt.',
+      parts: ['brunch', 'nachmittag'],
+      maxCompanions: 6,
+    },
+  },
 };
 
 // Rätsel: Die Antwort wird serverseitig geprüft.

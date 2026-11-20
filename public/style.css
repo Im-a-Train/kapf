@@ -384,3 +384,15 @@ body.shaken main, body.shaken header { animation: quake 0.6s; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .floaters { display: none; }
 }
+
+/* ---------- Programm ---------- */
+.program-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 10px; }
+.program-list li {
+  display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap;
+  background: var(--white); border: 3px solid var(--black); padding: 8px 12px;
+  box-shadow: 5px 5px 0 var(--pink);
+}
+.program-list li:nth-child(even) { transform: rotate(1deg); }
+.program-list li:nth-child(odd) { transform: rotate(-1deg); }
+.program-list b { font-family: "Press Start 2P", monospace; font-size: 13px; }
+.program-list strong { font-family: "Permanent Marker", cursive; font-size: 22px; font-weight: normal; }
