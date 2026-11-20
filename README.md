@@ -4,19 +4,24 @@ Anmeldeseite für den 30. Geburtstag von **Tim, Röbu, Chrigu & Melu**
 📍 Kapf · 📅 Samstag, 22.05.27
 
 Bad UI mit Absicht (inspiriert von [glunz.ch](https://glunz.ch)). Anmelden kann nur, wer ein Rätsel löst.
-Dazu gibt es ein kleines Admin-UI unter `/admin`.
+Dazu gibt es ein kleines Admin-UI unter `/admin` und die Planung der vier Gastgeber unter `/admin/planung/`
+(Aufgaben, Budget, Abrechnung; nur mit Admin-Login).
 
-### Zwei Einladungen, zwei Links
-
-| URL       | Für wen               | Programm                |
-|-----------|-----------------------|-------------------------|
-| `/`       | Freunde               | Nachmittag & Nacht      |
-| `/brunch` | Familien und Freunde  | Brunch & Nachmittag     |
-
-Beide Seiten nutzen dasselbe Formular. Gespeichert wird, über welchen Link sich jemand
-angemeldet hat und bei welchen Teilen die Person dabei ist. Im Admin gibt es dafür eine
-eigene Spalte, einen Filter und die Anzahl Personen pro Programmteil.
-Texte, Zeiten und Teile stehen in `config/event.js` unter `parts` und `invites`.
+Extras:
+- **Aafahrt** (klappt hinter «WO» auf): Startort wählen (Bärn, Oberdiessbach, Herblige, Schüpbach,
+  frei eingeben oder Handy-Standort), dann SBB-Verbindungen zur Postautohaltestelle Fischbach («Röthenbach i.E., Fischbach»),
+  Auto-Route in Google Maps, swisstopo-Karte und ein GPX (Velo, z Fuess, Auto) zum Herunterladen.
+  Die Daten kommen direkt im Browser von der [Fahrplan-API von search.ch](https://search.ch/timetable/api/help)
+  (SBB-Fahrplan; bewusst nicht transport.opendata.ch, das teilt sich ein Tageskontingent mit allen Nutzern), [BRouter](https://brouter.de) (GPX) und [swisstopo](https://map.geo.admin.ch) (Karte).
+  Der Server braucht dafür keinen Internetzugang.
+- **Crew:** Tim, Röbu, Chrigu & Melu klettern als Strichmännchen auf der Seite herum und fahren Velo,
+  sitzen am PC oder fahren Ski (`public/crew.js`).
+- **Fest schütteln** (Handy) oder die Maus wild hin und her bewegen: alles fällt zusammen. «Ufruume» stellt es wieder hin.
+- **Übernachten:** Checkbox im Formular, im Admin als 🏕️ und im CSV als `sleepover`.
+- **Kalender:** Nach der Zusage gibt es «📅 In den Kalender!» (`/api/event.ics`, Zeiten in `calendar` in `config/event.js`).
+- **Spielplatz:** Drei ASCII-Minigames (`public/games.js`): Downhill (Ski, Bäumen ausweichen, Bier sammeln),
+  Zelt bauen (Stapelspiel) und Pong gegen Melu-Bot. Tastatur oder Knöpfe, Highscores im Browser.
+- **8-Bit-Musik:** Startet beim ersten Tipp/Klick, Knopf unten links schaltet sie aus (`public/music.js`, reines Web Audio).
 
 ## Starten
 
@@ -36,6 +41,7 @@ npm test
 | `SECRET`         | zufällig beim Start       | Schlüssel für die Tokens. Setzen, damit Logins einen Neustart überleben. |
 | `PORT`           | `3000`                    | HTTP-Port                                                                |
 | `DATA_FILE`      | `data/registrations.json` | Hier werden die Anmeldungen gespeichert                                  |
+| `PLANNING_FILE`  | `planning.json` neben `DATA_FILE` | Stand der Planung (im Docker-Volume `/data/planning.json`)       |
 
 ### Deployment (Selfhosting mit Docker Compose)
 
@@ -63,15 +69,18 @@ Hinweise:
 ## Aufbau
 
 ```
-config/event.js      Event-Infos (Datum, Ort, Zeit, …) und Rätsel – hier anpassen
+config/event.js      Event-Infos (Datum, Ort, Koordinaten, Haltestelle, Startorte, …) und Rätsel – hier anpassen
 src/server.js        Einstiegspunkt (liest env, startet Server)
 src/app.js           Routen/API (öffentlich + Admin), statische Dateien
 src/registration.js  Validierung der Anmeldung + CSV-Export
 src/riddles.js       Rätsel-Auswahl und Antwortprüfung
+src/calendar.js      Kalenderdatei (.ics)
 src/auth.js          HMAC-signierte Tokens (Rätsel gelöst / Admin-Session)
 src/store.js         JSON-Datei-Speicher (austauschbar)
-public/              Anmeldeseite (Bad UI)
+src/planning.js      Planung: Startstand, Validierung, Speicher mit Versionsprüfung
+public/              Anmeldeseite (Bad UI): app.js, anfahrt.js (Aafahrt), crew.js (Strichmännchen), games.js, music.js
 public/admin/        Admin-UI (Good UI)
+public/admin/planung/ Planung der Gastgeber (aus dem Claude-Artifact übernommen)
 test/                API-Tests (node:test)
 ```
 
@@ -80,7 +89,9 @@ test/                API-Tests (node:test)
 | Methode | Pfad                              | Beschreibung                      |
 |---------|-----------------------------------|-----------------------------------|
 | GET     | `/api/event`                      | Event-Infos aus `config/event.js` |
+| GET     | `/api/event.ics`                  | Kalenderdatei zum Fest            |
 | GET     | `/api/riddle?not=<id>`            | Zufälliges Rätsel (ohne Antwort)  |
+| GET     | `/api/party`                      | Zusagen für die Party-Kachel (ohne Namen, nur Anzahl Begleitung) |
 | POST    | `/api/riddle/solve`               | `{id, answer}` → `{ok, token}`    |
 | POST    | `/api/registrations`              | Anmeldung (braucht `riddleToken`) |
 | POST    | `/api/admin/login`, `/logout`     | Admin-Session (Cookie)            |
@@ -88,12 +99,16 @@ test/                API-Tests (node:test)
 | GET     | `/api/admin/registrations.csv`    | CSV-Export (Excel-kompatibel)     |
 | PATCH   | `/api/admin/registrations/:id`    | Bearbeiten (inkl. interner Notiz) |
 | DELETE  | `/api/admin/registrations/:id`    | Löschen                           |
+| GET     | `/api/admin/planning`             | Planung `{version, updatedAt, state}` |
+| PUT     | `/api/admin/planning`             | `{version, state}` speichern, 409 bei Konflikt |
 
 ## Erweitern
 
 - **Neues Rätsel:** Eintrag in `riddles` in `config/event.js` (`id`, `question`, `hint`, `answers`).
 - **Neues Formularfeld:** Feld in `public/index.html` ergänzen, in `validateRegistration` (`src/registration.js`)
   aufnehmen und bei Bedarf in `CSV_COLUMNS` und der Admin-Tabelle (`public/admin/`) anzeigen.
+- **Grober Plan:** `plan` in `config/event.js` (Kachel + Checkboxen «Wenn bisch derbii?»). Die `id`s nicht ändern, sobald Anmeldungen da sind.
+- **Party-Modus:** Ohne Klick auf «🎉 PARTY-MODUS» steht alles still (`html:not(.party)` in `style.css`). JS-Animationen fragen `isParty()` aus `public/party.js` bzw. hören auf das Event `kapf:party`.
 - **Anmeldeschluss:** `registrationDeadline` in `config/event.js` setzen.
 - **Neue Seite** (z. B. Programm, Anfahrt): HTML-Datei in `public/` ablegen, sie wird automatisch ausgeliefert.
 - **Neue API-Route:** In `src/app.js` mit `route('GET', '/api/…', handler)` registrieren; Admin-Routen mit `requireAdmin(...)` umhüllen.

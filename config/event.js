@@ -8,35 +8,38 @@ export const event = {
   location: 'Kapf',
   date: '2027-05-22',
   dateLabel: 'Samstag, 22.05.27',
+  time: 'vom Brunch bis id Nacht', // TODO: genaue Zeiten festlegen
   // Anmeldeschluss (ISO-Datum) – danach nimmt die API keine Anmeldungen mehr an. null = offen.
   registrationDeadline: null,
-  maxCompanions: 3,
+  maxCompanions: 5,
+  // Grober Plan (Kachel auf der Seite + Checkboxen bei der Anmeldung).
+  // `id` wird gespeichert – nicht mehr ändern, wenn schon Anmeldungen da sind.
+  // `signup: false` = steht im Plan, aber man muss sich dafür nicht anmelden.
+  plan: [
+    { id: 'vormittag', when: 'Vormittag', what: 'Brunch', emoji: '🥐' },
+    { id: 'nachmittag', when: 'Nachmittag', what: 'Spiel und Spass', emoji: '🎯', signup: false },
+    { id: 'abend', when: 'Abend', what: "Z'Nacht und plaudern", emoji: '🍝' },
+    { id: 'nacht', when: 'Nacht', what: 'Schwoofe und Fiire', emoji: '🔥' },
+  ],
+  // Für die Kalenderdatei (/api/event.ics), Ortszeit Schweiz
+  calendar: { start: '2027-05-22T16:00', end: '2027-05-23T02:00', url: 'https://kapf.24eranker.dedyn.io' },
 
-  // Die Programmteile des Tages. Zeiten sind noch nicht definitiv.
-  parts: {
-    brunch: { label: 'Brunch', time: '10:30', emoji: '🥐' }, // TODO: Zeit festlegen
-    nachmittag: { label: 'Nachmittag', time: '14:00', emoji: '☀️' }, // TODO: Zeit festlegen
-    nacht: { label: 'Abend & Nacht', time: '19:00', emoji: '🌙' }, // TODO: Zeit festlegen
-  },
-
-  // Zwei Einladungen mit eigener URL. Wer über /brunch kommt, sieht die Familien-Version.
-  // `parts` = welche Programmteile diese Einladung zeigt und zur Auswahl stellt.
-  invites: {
-    fest: {
-      path: '/',
-      subtitle: 'Tim, Röbu, Chrigu & Melu werden 30. Zusammen. Im Kapf.',
-      intro: 'Ab dem Nachmittag feiern wir im Kapf, und zwar so lange, wie es geht. Bring gute Laune mit, für den Rest sorgen wir.',
-      parts: ['nachmittag', 'nacht'],
-      maxCompanions: 3,
-    },
-    brunch: {
-      path: '/brunch',
-      subtitle: 'Brunch mit Familie und Freunden. Kinder ausdrücklich erwünscht.',
-      intro: 'Am Samstagmorgen laden wir unsere Familien und Freunde zum Brunch im Kapf ein: Zopf, Kaffee, Rührei, so viel es braucht. Danach lassen wir den Nachmittag gemütlich zusammen ausklingen. Kommt, wann es euch passt, und bleibt, solange ihr mögt.',
-      parts: ['brunch', 'nachmittag'],
-      maxCompanions: 6,
-    },
-  },
+  // Anfahrt. Koordinaten vom Kapf: 46°51.88922'N, 7°46.04185'E
+  coords: { lat: 46.864820, lon: 7.767364 },
+  coordsLabel: "46°51.88922'N, 7°46.04185'E",
+  // Dasselbe in Schweizer Landeskoordinaten (LV95), für die swisstopo-Karte
+  lv95: { e: 2625065, n: 1190462 },
+  // Nächste Haltestelle (ID aus dem SBB-Fahrplan, transport.opendata.ch)
+  stop: { id: '8576713', name: 'Röthenbach i.E., Fischbach', lat: 46.860244, lon: 7.760571 },
+  // Ankunft spätestens um … (für die ÖV-Verbindungen)
+  arriveBy: '16:00',
+  // «Vo wo chunnsch?» – feste Startpunkte. `query`/`stationId`: Haltestelle im SBB-Fahrplan.
+  origins: [
+    { label: 'Bärn', query: 'Bern', stationId: '8507000', lat: 46.948823, lon: 7.439123 },
+    { label: 'Oberdiessbach', query: 'Oberdiessbach', stationId: '8508255', lat: 46.839255, lon: 7.617808 },
+    { label: 'Herblige', query: 'Herbligen, Dorf', stationId: '8583108', lat: 46.826839, lon: 7.607662 },
+    { label: 'Schüpbach', query: 'Schüpbach, Dorf', stationId: '8508988', lat: 46.92688, lon: 7.734342 },
+  ],
 };
 
 // Rätsel: Die Antwort wird serverseitig geprüft.

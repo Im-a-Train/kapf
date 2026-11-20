@@ -1,3 +1,5 @@
+import { isParty } from './party.js';
+
 const $ = (sel) => document.querySelector(sel);
 const api = async (path, opts = {}) => {
   const res = await fetch(path, {
@@ -13,67 +15,50 @@ const store = {
 };
 
 // ---------- Event-Infos ----------
-// Welche Einladung? /brunch → Familien-Version, sonst das Fest.
-const path = location.pathname.replace(/\/$/, '') || '/';
-let inviteName = 'fest';
-let invite = { parts: [] };
-let event = { maxCompanions: 3, date: '2027-05-22', parts: {} };
-
+let event = { maxCompanions: 5, date: '2027-05-22', plan: [] };
 api('/api/event').then(({ data }) => {
   event = { ...event, ...data };
-  inviteName = Object.keys(event.invites ?? {}).find((k) => event.invites[k].path === path) ?? 'fest';
-  invite = event.invites?.[inviteName] ?? { parts: [] };
-  const parts = invite.parts.map((id) => ({ id, ...event.parts[id] }));
-
   $('#title').textContent = event.title;
   splitTitle();
-  $('#subtitle').textContent = invite.subtitle ?? event.subtitle;
+  $('#subtitle').textContent = event.subtitle;
   $('#date').textContent = event.dateLabel;
-  $('#time').textContent = parts.length ? `ab ${parts[0].time}` : (event.time ?? '');
+  $('#time').textContent = event.time ?? '';
   $('#location').textContent = event.location;
   $('#hosts').textContent = event.hosts.join(' · ');
-  if (inviteName === 'brunch') document.title = `Brunch · ${document.title}`;
-  $('#marquee-text').textContent = `+++ ${[...event.hosts, '30', ...parts.map((p) => p.label), event.location, event.dateLabel].map((t) => t.toUpperCase()).join(' +++ ')} +++ BITTE NICHT VERGESSEN +++`;
-
-  // Programm
-  if (parts.length) {
-    $('#program-title').textContent = inviteName === 'brunch' ? 'Brunch & Nachmittag' : 'Nachmittag & Nacht';
-    $('#intro').textContent = invite.intro ?? '';
-    $('#program-list').replaceChildren(...parts.map((p) => {
-      const li = document.createElement('li');
-      const b = document.createElement('b');
-      b.textContent = `ab ${p.time}`;
-      const strong = document.createElement('strong');
-      strong.textContent = `${p.emoji ?? ''} ${p.label}`.trim();
-      li.append(b, strong);
-      return li;
-    }));
-    $('#program').hidden = false;
-  }
-
-  // Formular: Einladung merken, Teile zur Auswahl anbieten (nur wenn es etwas zu wählen gibt)
-  f.invite.value = inviteName;
-  f.companions.max = invite.maxCompanions ?? event.maxCompanions;
-  $('#parts-options').replaceChildren(...parts.map((p) => {
-    const label = document.createElement('label');
-    label.className = 'radio';
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.name = 'parts';
-    input.value = p.id;
-    input.checked = true;
-    label.append(input, ` ${p.emoji ?? ''} ${p.label} (ab ${p.time})`);
-    return label;
-  }));
-  syncAttending();
-  syncCompanions();
+  $('#signup-form').elements.companions.max = event.maxCompanions;
+  renderPlan();
 });
 
+// ---------- Grober Plan + Checkboxen «Wenn bisch derbii?» ----------
+function renderPlan() {
+  $('#plan-list').replaceChildren(...event.plan.map((p, i) => {
+    // Klick zeigt diese Tageszeit im Wimmelbild (party-scene.js)
+    const li = document.createElement('li');
+    li.className = `plan-item tilt-${i % 2 ? 'r' : 'l'}`;
+    li.innerHTML = '<button type="button" class="plan-btn" aria-pressed="false"><span class="plan-emoji"></span><span class="plan-when"></span><strong class="plan-what"></strong><span class="plan-look">👀 im Bild aaluege</span></button>';
+    const btn = li.querySelector('button');
+    btn.dataset.phase = p.id;
+    li.querySelector('.plan-emoji').textContent = p.emoji;
+    li.querySelector('.plan-when').textContent = p.when;
+    li.querySelector('.plan-what').textContent = p.what;
+    btn.addEventListener('click', () => dispatchEvent(new CustomEvent('kapf:phase', { detail: p.id })));
+    return li;
+  }));
+  $('#parts-list').replaceChildren(...event.plan.filter((p) => p.signup !== false).map((p) => {
+    const label = document.createElement('label');
+    label.className = 'check';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.name = 'parts';
+    box.value = p.id;
+    label.append(box, ` ${p.emoji} ${p.when}: ${p.what}`);
+    return label;
+  }));
+}
+
 // ---------- Countdown ----------
-// Zählt bis zum Start des ersten Programmteils dieser Einladung.
 function tick() {
-  const start = event.parts?.[invite.parts?.[0]]?.time ?? '16:00';
-  const secs = Math.max(0, Math.floor((new Date(`${event.date}T${start}:00`) - Date.now()) / 1000));
+  const secs = Math.max(0, Math.floor((new Date(`${event.date}T16:00:00`) - Date.now()) / 1000));
   $('#countdown').textContent = secs.toLocaleString('de-CH');
 }
 tick();
@@ -82,11 +67,11 @@ setInterval(tick, 1000);
 // ---------- Rätsel ----------
 const NOPE = [
   'Falsch. Aber schön geschrieben.',
-  'Nope. Tim hätte das gewusst. Vielleicht.',
+  'Noch nicht ganz. Tim musste auch zweimal überlegen.',
   'Knapp daneben ist auch vorbei.',
-  'Nein. Röbu lacht dich gerade aus.',
+  'Fast! Röbu drückt dir die Daumen.',
   'Hast du es mit Ausdrucken und Anschauen probiert?',
-  'Leider nein. Chrigu ist enttäuscht.',
+  'Leider nein. Chrigu glaubt trotzdem an dich.',
 ];
 let riddle = null;
 let fails = 0;
@@ -138,7 +123,7 @@ function unlockSignup() {
 // ---------- Formular ----------
 const form = $('#signup-form');
 const f = form.elements;
-const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Ganze Delegation?!', 'Halbe Fussballmannschaft.', 'Wir brauchen mehr Zopf.', 'Ganzer Familienclan! 🥐'];
+const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Viererbande.', 'Fast schon ein Verein.', 'Ganze Delegation?!'];
 
 function syncCompanions() {
   const n = Number(f.companions.value);
@@ -148,14 +133,24 @@ function syncCompanions() {
 }
 f.companions.addEventListener('input', syncCompanions);
 
-function syncAttending() {
+form.addEventListener('change', () => {
   const no = f.attending.value === 'no';
   $('#companions-label').hidden = no;
-  // Auswahl der Teile nur, wenn man zusagt und die Einladung mehrere Teile hat
-  $('#parts-fieldset').hidden = no || (invite.parts?.length ?? 0) < 2;
+  $('#sleepover-label').hidden = no;
+  $('#car-label').hidden = no;
+  $('#parts-fieldset').hidden = no;
+  if (no) { f.sleepover.checked = false; f.car.checked = false; }
   if (no) { f.companions.value = 0; syncCompanions(); }
-}
-form.addEventListener('change', syncAttending);
+});
+
+// «Sponti» schliesst die festen Zeitfenster aus (und umgekehrt)
+form.addEventListener('change', (e) => {
+  if (e.target.name !== 'parts' || !e.target.checked) return;
+  const sponti = e.target.value === 'spontan';
+  for (const box of form.querySelectorAll('input[name="parts"]')) {
+    if (box !== e.target && (sponti || box.value === 'spontan')) box.checked = false;
+  }
+});
 
 // Der Knopf flieht ein paar Mal (nur mit Maus). Tastatur & Touch funktionieren immer.
 const btn = $('#submit-btn');
@@ -185,10 +180,14 @@ form.addEventListener('submit', async (e) => {
   if (status === 201) {
     $('#signup').hidden = true;
     $('#done').hidden = false;
-    const when = (data.parts ?? []).map((p) => event.parts?.[p]?.label).filter(Boolean).join(' und ');
     $('#done-text').textContent = data.attending === 'yes'
-      ? `${data.name}, du bist dabei${when ? ` (${when})` : ''}! Wir sehen uns am ${event.dateLabel} im ${event.location}.`
+      ? `${data.name}, du bist dabei! Wir sehen uns am ${event.dateLabel} im ${event.location}.`
       : `Schade, ${data.name}. Wir trinken eins auf dich.`;
+    $('#done-cal').hidden = data.attending !== 'yes';
+    $('#done-love').hidden = data.attending !== 'yes';
+    if (data.attending === 'yes') {
+      dispatchEvent(new CustomEvent('kapf:registered', { detail: { name: body.name, plus: Number(body.companions) || 0, parts: body.parts } }));
+    }
     $('#done').scrollIntoView({ behavior: 'smooth' });
     confetti(300);
     [0.2, 0.5, 0.8].forEach((fx, i) => setTimeout(() => confetti(60, { x: innerWidth * fx, y: innerHeight * 0.6 }), i * 400));
@@ -207,8 +206,7 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// ---------- Konfetti ----------
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// ---------- Konfetti (nur im Party-Modus) ----------
 const EMOJI = ['🎉', '🎂', '🍺', '🥳', '30', '🎈', '🍾', '✨', '🥨', '🎊'];
 const COLORS = ['#ff22ff', '#ffff00', '#00ff66', '#0000ff', '#ff3300', '#00e5ff', '#000'];
 const MAX_PIECES = 400;
@@ -216,7 +214,7 @@ let live = 0;
 
 // n Stück, entweder als Regen von oben oder als Explosion ab (x, y)
 function confetti(n = 80, { x, y, bits = EMOJI } = {}) {
-  if (reduced) return;
+  if (!isParty()) return;
   const burst = x !== undefined;
   for (let i = 0; i < n && live < MAX_PIECES; i++) {
     const s = document.createElement('span');
@@ -257,12 +255,17 @@ function confetti(n = 80, { x, y, bits = EMOJI } = {}) {
   }
 }
 
-// Konfetti überall: beim Laden, bei jedem Knopfdruck und als Dauer-Niesel
-addEventListener('load', () => confetti(120));
+// Konfetti überall: beim Einschalten der Party, bei jedem Knopfdruck und als Dauer-Niesel
+addEventListener('kapf:party', ({ detail: on }) => {
+  if (on) {
+    confetti(150);
+    confetti(80, { x: innerWidth / 2, y: innerHeight / 2 });
+  }
+});
 setInterval(() => document.visibilityState === 'visible' && confetti(10), 3000);
 document.addEventListener('click', (e) => {
   const b = e.target.closest('button, .radio, a');
-  if (!b) return;
+  if (!b || b.closest('.game-ctl')) return; // Game-Knöpfe ohne Konfetti, sonst sieht man nichts
   const r = b.getBoundingClientRect();
   const fromKeyboard = e.clientX === 0 && e.clientY === 0;
   confetti(25, fromKeyboard ? { x: r.left + r.width / 2, y: r.top } : { x: e.clientX, y: e.clientY });
@@ -292,9 +295,9 @@ splitTitle();
 
 // Glitzer hinter dem Mauszeiger
 let lastSparkle = 0;
-if (!reduced) {
+{
   addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse' || e.timeStamp - lastSparkle < 60) return;
+    if (!isParty() || e.pointerType !== 'mouse' || e.timeStamp - lastSparkle < 60) return;
     lastSparkle = e.timeStamp;
     const s = document.createElement('span');
     s.className = 'sparkle';
@@ -312,32 +315,40 @@ if (!reduced) {
 const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
 const clamp = (v) => Math.max(-1, Math.min(1, v));
 
-if (!reduced) {
+{
   addEventListener('deviceorientation', (e) => {
-    if (e.gamma == null) return;
+    if (!isParty() || e.gamma == null) return;
     tilt.tx = clamp(e.gamma / 35);
     tilt.ty = clamp((e.beta - 45) / 35); // normale Haltung ≈ 45°
   });
   addEventListener('pointermove', (e) => {
-    if (e.pointerType !== 'mouse') return;
+    if (!isParty() || e.pointerType !== 'mouse') return;
     tilt.tx = clamp((e.clientX / innerWidth - 0.5) * 1.2);
     tilt.ty = clamp((e.clientY / innerHeight - 0.5) * 1.2);
   });
 
   const root = document.documentElement;
-  (function loop() {
+  const loop = () => {
+    if (!isParty()) {
+      Object.assign(tilt, { x: 0, y: 0, tx: 0, ty: 0 });
+      root.style.setProperty('--tx', 0);
+      root.style.setProperty('--ty', 0);
+      return;
+    }
     tilt.x += (tilt.tx - tilt.x) * 0.12;
     tilt.y += (tilt.ty - tilt.y) * 0.12;
     root.style.setProperty('--tx', tilt.x.toFixed(3));
     root.style.setProperty('--ty', tilt.y.toFixed(3));
     requestAnimationFrame(loop);
-  })();
+  };
+  addEventListener('kapf:party', ({ detail: on }) => on && requestAnimationFrame(loop));
 
   let lastShake = 0;
   let last = null;
+  const hard = [];
   addEventListener('devicemotion', (e) => {
     const a = e.accelerationIncludingGravity;
-    if (!a || a.x == null) return;
+    if (!isParty() || !a || a.x == null) return;
     if (last) {
       const delta = Math.abs(a.x - last.x) + Math.abs(a.y - last.y) + Math.abs(a.z - last.z);
       if (delta > 30 && e.timeStamp - lastShake > 1200) {
@@ -349,15 +360,95 @@ if (!reduced) {
         document.body.classList.add('shaken');
         navigator.vibrate?.(80);
       }
+      // Fest schütteln (viele starke Ausschläge in einer Sekunde): alles fällt zusammen
+      if (delta > 35) {
+        hard.push(e.timeStamp);
+        while (hard.length && e.timeStamp - hard[0] > 1000) hard.shift();
+        if (hard.length >= 6) { hard.length = 0; collapse(); }
+      }
     }
     last = { x: a.x, y: a.y, z: a.z };
   });
+  // iOS-Erlaubnis für die Sensoren holt party.js beim Tap auf den Party-Knopf
+}
 
-  // iOS will eine Erlaubnis, und zwar nach einem Tap
-  const askMotion = () => {
-    for (const E of [globalThis.DeviceOrientationEvent, globalThis.DeviceMotionEvent]) {
-      if (typeof E?.requestPermission === 'function') E.requestPermission().catch(() => {});
+// ---------- Fest schütteln = alles fällt zusammen ----------
+// Auf dem Handy per Bewegungssensor (oben), auf dem Desktop per wildem Mausschütteln.
+// Der Knopf «Ufruume» stellt alles wieder hin.
+const FALLING = 'header > *, .fact, .box:not([hidden]) > :not(form), .box:not([hidden]) form > *, footer, .guy:not(.gone), .marquee';
+let fallen = null;
+
+function collapse() {
+  if (fallen || !isParty()) return;
+  dispatchEvent(new Event('kapf:collapse'));
+  navigator.vibrate?.([100, 50, 200]);
+  const floor = innerHeight;
+  let pile = 0;
+  const els = [...document.querySelectorAll(FALLING)]
+    .map((el) => ({ el, r: el.getBoundingClientRect() }))
+    .filter(({ r }) => r.width && r.height)
+    .sort((a, b) => b.r.bottom - a.r.bottom);
+  fallen = els.map(({ el, r }, i) => {
+    let dy;
+    if (r.top > floor) {
+      dy = floor; // liegt unterhalb vom Bildschirm: fällt einfach weiter
+    } else {
+      dy = Math.max(0, floor - r.bottom - pile);
+      pile = Math.min(floor * 0.6, pile + Math.min(r.height, 60) * 0.5);
     }
-  };
-  addEventListener('touchend', askMotion, { once: true });
+    const dx = (Math.random() - 0.5) * 120;
+    const rot = (Math.random() - 0.5) * (r.width > 300 ? 40 : 160);
+    const anim = el.animate([
+      { transform: 'translate(0, 0) rotate(0deg)' },
+      { transform: `translate(${dx * 0.8}px, ${dy}px) rotate(${rot}deg)`, offset: 0.7 },
+      { transform: `translate(${dx * 0.9}px, ${dy - 18}px) rotate(${rot * 1.05}deg)`, offset: 0.85 },
+      { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)` },
+    ], { duration: 900 + Math.random() * 600, delay: i * 25 + Math.random() * 150, easing: 'ease-in', fill: 'forwards' });
+    return anim;
+  });
+  document.body.classList.add('collapsed');
+  setTimeout(() => { $('#tidy-btn').hidden = false; }, 1200);
+}
+
+function tidy() {
+  if (!fallen) return;
+  $('#tidy-btn').hidden = true;
+  const anims = fallen;
+  fallen = null;
+  for (const a of anims) {
+    a.updatePlaybackRate(1.8);
+    a.reverse();
+  }
+  Promise.all(anims.map((a) => a.finished.catch(() => {}))).then(() => {
+    for (const a of anims) a.cancel();
+    document.body.classList.remove('collapsed');
+    dispatchEvent(new Event('kapf:tidy'));
+    confetti(120);
+  });
+}
+$('#tidy-btn').addEventListener('click', tidy);
+
+// Party aus: alles sofort wieder an seinen Platz
+addEventListener('kapf:party', ({ detail: on }) => {
+  if (on || !fallen) return;
+  for (const a of fallen) a.cancel();
+  fallen = null;
+  $('#tidy-btn').hidden = true;
+  document.body.classList.remove('collapsed');
+  dispatchEvent(new Event('kapf:tidy'));
+});
+
+// Desktop: Maus schnell hin und her schütteln
+{
+  let dir = 0;
+  const flips = [];
+  addEventListener('pointermove', (e) => {
+    if (!isParty() || e.pointerType !== 'mouse' || Math.abs(e.movementX) < 25) return;
+    const d = Math.sign(e.movementX);
+    if (d === dir) return;
+    dir = d;
+    flips.push(e.timeStamp);
+    while (flips.length && e.timeStamp - flips[0] > 1500) flips.shift();
+    if (flips.length >= 10) { flips.length = 0; collapse(); }
+  });
 }

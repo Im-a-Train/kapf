@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createAuth } from './auth.js';
 import { createRiddles } from './riddles.js';
 import { toCsv, validateRegistration } from './registration.js';
+import { toIcs } from './calendar.js';
 
 const PUBLIC_DIR = resolve(fileURLToPath(new URL('../public', import.meta.url)));
 const MIME = {
@@ -19,7 +20,7 @@ const MIME = {
   '.gif': 'image/gif',
 };
 
-export function createApp({ event, riddles, store, secret, adminPassword }) {
+export function createApp({ event, riddles, store, planning, secret, adminPassword }) {
   const auth = createAuth({ secret, adminPassword });
   const riddleSet = createRiddles(riddles);
   const routes = [];
@@ -33,6 +34,14 @@ export function createApp({ event, riddles, store, secret, adminPassword }) {
 
   // --- Öffentlich -------------------------------------------------------
   route('GET', '/api/event', ({ res }) => json(res, 200, event));
+
+  route('GET', '/api/event.ics', ({ res }) => {
+    res.writeHead(200, {
+      'Content-Type': 'text/calendar; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="kapf-4x30.ics"',
+    });
+    res.end(toIcs(event));
+  });
 
   route('GET', '/api/riddle', ({ res, url }) => json(res, 200, riddleSet.random(url.searchParams.get('not'))));
 
@@ -48,12 +57,22 @@ export function createApp({ event, riddles, store, secret, adminPassword }) {
     }
     const input = await body(req);
     if (!auth.verifyRiddleToken(input.riddleToken)) {
-      return json(res, 403, { code: 'RIDDLE', errors: ['Zuerst das Rätsel lösen, du Schlaumeier.'] });
+      return json(res, 403, { code: 'RIDDLE', errors: ['Zuerst noch kurz das Rätsel lösen, dann klappt’s.'] });
     }
-    const { data, errors } = validateRegistration(input, event);
+    const { data, errors } = validateRegistration(input, event, { requireParts: true });
     if (errors.length) return json(res, 400, { errors });
     const created = await store.create({ ...data, note: '' });
-    return json(res, 201, { id: created.id, name: created.name, attending: created.attending, parts: created.parts });
+    return json(res, 201, { id: created.id, name: created.name, attending: created.attending });
+  });
+
+  // Wer kommt? Für die Party-Kachel. Bewusst ohne Namen, nur die Anzahl Begleitung und
+  // die Zeitfenster, in der Reihenfolge der Anmeldung (so füllt sich die Party).
+  route('GET', '/api/party', async ({ res }) => {
+    const guests = (await store.list())
+      .filter((r) => r.attending === 'yes')
+      .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))
+      .map((r) => ({ plus: r.companions || 0, parts: r.parts ?? [] }));
+    return json(res, 200, { hosts: event.hosts, guests });
   });
 
   // --- Admin ------------------------------------------------------------
@@ -98,6 +117,17 @@ export function createApp({ event, riddles, store, secret, adminPassword }) {
     return json(res, 200, { ok: true });
   }));
 
+  // --- Planung (nur Admin) ---------------------------------------------
+  if (planning) {
+    route('GET', '/api/admin/planning', requireAdmin(async ({ res }) => json(res, 200, await planning.get())));
+
+    route('PUT', '/api/admin/planning', requireAdmin(async ({ req, res }) => {
+      const input = await body(req, 500_000);
+      const result = await planning.save(input.state, input.version);
+      return json(res, result.conflict ? 409 : 200, result.doc);
+    }));
+  }
+
   // --- Handler ----------------------------------------------------------
   return createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
@@ -110,10 +140,7 @@ export function createApp({ event, riddles, store, secret, adminPassword }) {
       }
       if (url.pathname.startsWith('/api/')) return json(res, 404, { error: 'Unbekannt' });
       if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'Nope' });
-      // Einladungs-URLs (z. B. /brunch) zeigen dieselbe Seite, das Frontend wählt den Text.
-      const invitePaths = Object.values(event.invites ?? {}).map((i) => i.path.replace(/\/$/, ''));
-      const pathname = invitePaths.includes(url.pathname.replace(/\/$/, '')) ? '/' : url.pathname;
-      return await serveStatic(pathname, res);
+      return await serveStatic(url.pathname, res);
     } catch (err) {
       if (err.status) return json(res, err.status, { error: err.message });
       console.error(err);

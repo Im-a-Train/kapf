@@ -5,6 +5,9 @@
 body { margin: 0; font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--fg); }
 header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #111; color: var(--yellow); border-bottom: 4px solid var(--pink); }
 header h1 { margin: 0; font-size: 20px; }
+header .nav { display: flex; align-items: center; gap: 16px; }
+header .nav a { color: var(--yellow); font-weight: 600; text-decoration: none; }
+header .nav a:hover { text-decoration: underline; }
 main { padding: 20px; max-width: 1400px; margin: 0 auto; }
 button, .button { font: inherit; padding: 8px 14px; border: 2px solid #111; background: var(--pink); color: #fff; cursor: pointer; text-decoration: none; border-radius: 4px; display: inline-block; }
 button.ghost { background: transparent; color: inherit; border-color: currentColor; }
@@ -40,7 +43,3 @@ dialog h2 { margin-top: 0; }
 dialog label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 13px; }
 dialog label > * { margin-top: 3px; font-weight: normal; font-size: 15px; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
-.badge.invite-brunch { background: #fde9b8; } .badge.invite-fest { background: #e3d7fb; }
-dialog fieldset.parts { border: 1px solid #ccc; border-radius: 6px; margin: 0 0 10px; padding: 6px 10px; font-size: 13px; }
-dialog label.inline { display: inline-block; margin: 0 14px 0 0; font-weight: normal; }
-dialog label.inline > input { width: auto; display: inline; margin: 0 4px 0 0; vertical-align: middle; }

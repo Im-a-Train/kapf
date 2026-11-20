@@ -11,35 +11,35 @@ const api = async (path, method = 'GET', body) => {
 };
 
 let registrations = [];
-let event = { parts: {}, invites: {} };
-const partLabel = (p) => event.parts?.[p]?.label ?? p;
-const inviteOf = (r) => (r.invite in (event.invites ?? {}) ? r.invite : 'fest');
-// Alte Anmeldungen ohne Teile: alle Teile ihrer Einladung
-const partsOf = (r) => r.parts ?? event.invites?.[inviteOf(r)]?.parts ?? [];
+let plan = [];
+api('/api/event').then(({ data }) => { plan = data.plan ?? []; render(); });
+const partsLabel = (parts = []) => (parts.includes('spontan') ? '🤷 sponti'
+  : plan.filter((p) => parts.includes(p.id)).map((p) => `${p.emoji} ${p.when}`).join(', '));
 
 function showLogin() {
   $('#login').hidden = false;
   $('#dashboard').hidden = true;
   $('#logout').hidden = true;
+  $('#planning-link').hidden = true;
 }
 
 async function load() {
-  const ev = await api('/api/event');
-  if (ev.ok) event = ev.data;
   const { ok, data } = await api('/api/admin/registrations');
   if (!ok) return;
   registrations = data;
   $('#login').hidden = true;
   $('#dashboard').hidden = false;
   $('#logout').hidden = false;
+  $('#planning-link').hidden = false;
   render();
 }
 
 function render() {
+  if ($('#dashboard').hidden) return;
   const q = $('#search').value.toLowerCase();
   const filter = $('#filter').value;
   const list = registrations.filter((r) =>
-    (!filter || r.attending === filter || inviteOf(r) === filter) &&
+    (!filter || r.attending === filter) &&
     (!q || [r.name, r.email, r.companionNames, r.diet, r.message, r.note].join(' ').toLowerCase().includes(q)));
 
   const yes = registrations.filter((r) => r.attending === 'yes');
@@ -47,22 +47,23 @@ function render() {
     ['Anmeldungen', registrations.length],
     ['Zusagen', yes.length],
     ['Personen total', yes.reduce((n, r) => n + 1 + (r.companions || 0), 0)],
-    ...Object.keys(event.parts ?? {}).map((p) => [
-      `Personen ${partLabel(p)}`,
-      yes.filter((r) => partsOf(r).includes(p)).reduce((n, r) => n + 1 + (r.companions || 0), 0),
-    ]),
     ['Absagen', registrations.length - yes.length],
+    ['Übernachten (Pers.)', yes.filter((r) => r.sleepover === 'yes').reduce((n, r) => n + 1 + (r.companions || 0), 0)],
+    ['🚗 Autos', yes.filter((r) => r.car === 'yes').length],
     ['Mit Essenswunsch', yes.filter((r) => r.diet).length],
+    ...plan.filter((p) => p.signup !== false).map((p) => [`${p.emoji} ${p.when} (Pers.)`, yes.filter((r) => r.parts?.includes(p.id)).reduce((n, r) => n + 1 + (r.companions || 0), 0)]),
+    ['🤷 Sponti (Pers.)', yes.filter((r) => r.parts?.includes('spontan')).reduce((n, r) => n + 1 + (r.companions || 0), 0)],
   ];
   $('#stats').replaceChildren(...stats.map(([label, n]) => el('div', { class: 'stat' }, el('b', {}, n), label)));
 
   $('#rows').replaceChildren(...list.map((r) => el('tr', { class: r.attending },
     el('td', {}, el('strong', {}, r.name), r.email ? el('div', { class: 'muted' }, r.email) : ''),
-    el('td', {}, el('span', { class: `badge invite-${inviteOf(r)}` }, inviteOf(r) === 'brunch' ? 'Brunch-Link' : 'Fest-Link')),
     el('td', {}, el('span', { class: `badge ${r.attending}` }, r.attending === 'yes' ? 'Ja' : 'Nein')),
-    el('td', { class: 'wrap' }, r.attending === 'yes' ? partsOf(r).map(partLabel).join(', ') : ''),
     el('td', {}, r.companions || ''),
     el('td', { class: 'wrap' }, r.companionNames),
+    el('td', { class: 'wrap' }, partsLabel(r.parts)),
+    el('td', {}, r.sleepover === 'yes' ? '🏕️' : ''),
+    el('td', {}, r.car === 'yes' ? '🚗' : ''),
     el('td', { class: 'wrap' }, r.diet),
     el('td', { class: 'wrap' }, r.message),
     el('td', { class: 'wrap' }, r.note),
@@ -90,31 +91,20 @@ function edit(r) {
   editing = r;
   const f = $('#edit-form').elements;
   for (const k of ['name', 'email', 'attending', 'companions', 'companionNames', 'diet', 'message', 'note']) f[k].value = r[k] ?? '';
-  f.invite.value = inviteOf(r);
-  renderPartBoxes(partsOf(r));
+  f.sleepover.value = r.sleepover === 'yes' ? 'yes' : 'no';
+  f.car.value = r.car === 'yes' ? 'yes' : 'no';
   $('#edit-error').textContent = '';
   $('#edit').showModal();
 }
 
 $('#save').addEventListener('click', async (e) => {
   e.preventDefault();
-  const fd = new FormData($('#edit-form'));
-  const body = Object.fromEntries(fd);
-  body.parts = fd.getAll('parts');
+  const body = Object.fromEntries(new FormData($('#edit-form')));
   const { ok, data } = await api(`/api/admin/registrations/${editing.id}`, 'PATCH', body);
   if (!ok) { $('#edit-error').textContent = (data.errors ?? [data.error]).join(' '); return; }
   $('#edit').close();
   load();
 });
-
-// Checkboxen für die Teile der gewählten Einladung
-function renderPartBoxes(checked) {
-  const invite = $('#edit-form').elements.invite.value;
-  const parts = event.invites?.[invite]?.parts ?? [];
-  $('#edit-parts').replaceChildren(...parts.map((p) =>
-    el('label', { class: 'inline' }, el('input', { type: 'checkbox', name: 'parts', value: p, ...(checked.includes(p) ? { checked: '' } : {}) }), ' ', partLabel(p))));
-}
-$('#edit-form').elements.invite.addEventListener('change', (e) => renderPartBoxes(event.invites?.[e.target.value]?.parts ?? []));
 
 async function remove(r) {
   if (!confirm(`Anmeldung von «${r.name}» wirklich löschen?`)) return;

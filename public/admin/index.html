@@ -10,7 +10,10 @@
 <body>
   <header>
     <h1>🎂 Kapf Admin</h1>
-    <button id="logout" class="ghost" hidden>Logout</button>
+    <nav class="nav">
+      <a href="/admin/planung/" id="planning-link" hidden>📋 Planung</a>
+      <button id="logout" class="ghost" hidden>Logout</button>
+    </nav>
   </header>
 
   <main>
@@ -30,8 +33,6 @@
           <option value="">Alle</option>
           <option value="yes">Kommen</option>
           <option value="no">Kommen nicht</option>
-          <option value="brunch">Über Brunch-Link</option>
-          <option value="fest">Über Fest-Link</option>
         </select>
         <button id="reload" class="ghost">↻ Neu laden</button>
         <a href="/api/admin/registrations.csv" class="button">CSV exportieren</a>
@@ -41,7 +42,7 @@
         <table>
           <thead>
             <tr>
-              <th>Name</th><th>Link</th><th>Kommt</th><th>Wann</th><th>+</th><th>Begleitung</th><th>Essen</th><th>Nachricht</th><th>Notiz</th><th>Datum</th><th></th>
+              <th>Name</th><th>Kommt</th><th>+</th><th>Begleitung</th><th>Wenn</th><th title="Übernachtet">🏕️</th><th title="Kommt mit dem Auto">🚗</th><th>Essen</th><th>Nachricht</th><th>Notiz</th><th>Datum</th><th></th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -59,12 +60,14 @@
       <label>Kommt
         <select name="attending"><option value="yes">Ja</option><option value="no">Nein</option></select>
       </label>
-      <label>Einladung
-        <select name="invite"><option value="fest">Fest (Nachmittag &amp; Nacht)</option><option value="brunch">Brunch (Brunch &amp; Nachmittag)</option></select>
-      </label>
-      <fieldset class="parts"><legend>Dabei bei</legend><div id="edit-parts"></div></fieldset>
       <label>Begleitpersonen <input name="companions" type="number" min="0"></label>
       <label>Namen Begleitung <input name="companionNames" maxlength="300"></label>
+      <label>Übernachtet
+        <select name="sleepover"><option value="no">Nein</option><option value="yes">Ja</option></select>
+      </label>
+      <label>Mit em Charre
+        <select name="car"><option value="no">Nein</option><option value="yes">Ja</option></select>
+      </label>
       <label>Essen <input name="diet" maxlength="300"></label>
       <label>Nachricht <textarea name="message" rows="3" maxlength="1000"></textarea></label>
       <label>Interne Notiz <textarea name="note" rows="2" maxlength="1000"></textarea></label>
