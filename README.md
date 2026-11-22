@@ -10,8 +10,8 @@ Dazu gibt es ein kleines Admin-UI unter `/admin` und die Planung der vier Gastge
 
 | URL       | Für wen              | Plan                                |
 |-----------|----------------------|-------------------------------------|
-| `/brunch` | Familien und Freunde | Brunch, Nachmittag (wer mag: Abend, Nacht) |
-| `/`       | Freunde              | Nachmittag, Abend, Nacht            |
+| `/brunch` | Familien und Freund:innen | Brunch, Nachmittag (wer mag: Abend, Nacht) |
+| `/`       | Freund:innen         | Nachmittag, Abend, Nacht            |
 
 Beide Seiten nutzen dasselbe Formular. Gespeichert wird, über welchen Link sich jemand
 angemeldet hat (`invite`). Über den Brunch-Link sind grössere Gruppen erlaubt und nur die

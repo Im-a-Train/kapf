@@ -21,7 +21,7 @@ export const event = {
     { id: 'abend', when: 'Abend', what: "Z'Nacht und plaudern", emoji: '🍝' },
     { id: 'nacht', when: 'Nacht', what: 'Schwoofe und Fiire', emoji: '🔥' },
   ],
-  // Zwei Einladungen mit eigener URL. Den Familien schickt ihr /brunch, den Freunden /.
+  // Zwei Einladungen mit eigener URL. Den Familien schickt ihr /brunch, den Freund:innen /.
   // Alles hier überschreibt die Werte oben, `plan` wählt die Plan-Punkte (ids) dieser Einladung.
   // `extra`: Plan-Punkte, die zusätzlich wählbar sind und als «wer mag» angezeigt werden.
   // Zeiten sind noch nicht definitiv.
@@ -33,8 +33,8 @@ export const event = {
     },
     brunch: {
       path: '/brunch',
-      subtitle: 'Brunch mit Familie und Freunden.',
-      intro: 'Am Samstagmorgen laden wir unsere Familien und Freunde zum Brunch im Kapf ein: Zopf, Kaffee, Rührei, so viel es braucht. Danach lassen wir den Nachmittag gemütlich zusammen ausklingen. Kommt, wann es euch passt, und bleibt, solange ihr mögt: Wer Lust hat, ist auch zum Znacht und am Fest in der Nacht herzlich willkommen. Kreuzt bei der Anmeldung einfach alles an, wo ihr dabei seid.',
+      subtitle: 'Brunch mit Familie und Freund:innen.',
+      intro: 'Am Samstagmorgen laden wir unsere Familien und Freund:innen zum Brunch im Kapf ein: Zopf, Kaffee, Rührei, so viel es braucht. Danach lassen wir den Nachmittag gemütlich zusammen ausklingen. Kommt, wann es euch passt, und bleibt, solange ihr mögt: Wer Lust hat, ist auch zum Znacht und am Fest in der Nacht herzlich willkommen. Kreuzt bei der Anmeldung einfach alles an, wo ihr dabei seid.',
       time: 'Brunch und Nachmittag, wer mag bis in die Nacht',
       plan: ['vormittag', 'nachmittag'],
       extra: ['abend', 'nacht'],
@@ -69,7 +69,7 @@ export const event = {
 export const riddles = [
   {
     id: 'alter',
-    question: 'Vier Freunde werden je 30 Jahre alt. Wie alt sind sie zusammen?',
+    question: 'Vier Freund:innen werden je 30 Jahre alt. Wie alt sind sie zusammen?',
     hint: 'Steht eigentlich schon oben.',
     answers: ['120', 'hundertzwanzig'],
   },

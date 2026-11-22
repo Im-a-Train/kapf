@@ -138,7 +138,7 @@ function unlockSignup() {
 // ---------- Formular ----------
 const form = $('#signup-form');
 const f = form.elements;
-const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Viererbande.', 'Fast schon ein Verein.', 'Ganze Delegation?!'];
+const QUIPS = ['Solo. Mutig.', 'Zu zweit. Herzig.', 'Kleine Gang.', 'Viererbande.', 'Fast schon ein Verein.', 'Ganze Delegation?!', 'Ein Tisch reicht nicht mehr.', 'Die ganze Suppe.', 'Der Clan.'];
 
 function syncCompanions() {
   const n = Number(f.companions.value);

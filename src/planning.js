@@ -27,7 +27,7 @@ export const DEFAULT_PLANNING = {
     task('t11', 'chrigu', 'Getränkemengen pro Gast schätzen', '2027-03-31'),
     task('t12', 'chrigu', 'Bierfass und Zapfanlage reservieren', '2027-04-15'),
     task('t13', 'chrigu', 'Kühlung organisieren (Kühlwagen/Kühlschränke)', '2027-04-15'),
-    task('t14', 'chrigu', 'Bar-Schichtplan unter Freunden', '2027-05-08'),
+    task('t14', 'chrigu', 'Bar-Schichtplan unter Freund:innen', '2027-05-08'),
     task('t15', 'melu', 'Menü festlegen, inkl. Vegi-Variante', '2027-02-28'),
     task('t16', 'melu', 'Grill(s) organisieren', '2027-04-15'),
     task('t17', 'melu', 'Geburtstagskuchen bestellen', '2027-05-01'),
