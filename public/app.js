@@ -196,7 +196,7 @@ form.addEventListener('submit', async (e) => {
     $('#signup').hidden = true;
     $('#done').hidden = false;
     $('#done-text').textContent = data.attending === 'yes'
-      ? `${data.name}, du bist dabei! Wir sehen uns am ${event.dateLabel} im ${event.location}.`
+      ? `${data.name}, du bist dabei! Wir sehen uns am ${event.dateLabel}, im ${event.location}.`
       : `Schade, ${data.name}. Wir trinken eins auf dich.`;
     $('#done-cal').hidden = data.attending !== 'yes';
     $('#done-love').hidden = data.attending !== 'yes';
