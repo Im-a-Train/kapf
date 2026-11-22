@@ -26,7 +26,7 @@ api(eventUrl).then(({ data }) => {
   $('#intro').hidden = !event.intro;
   if (event.invite === 'brunch') {
     document.title = `Brunch · ${document.title}`;
-    $('#marquee-text').textContent = `+++ BRUNCH +++ TIM +++ RÖBU +++ CHRIGU +++ MELU +++ 30 +++ KAPF +++ ${event.dateLabel.toUpperCase()} +++ KINDER WILLKOMMEN +++`;
+    $('#marquee-text').textContent = `+++ BRUNCH +++ TIM +++ RÖBU +++ CHRIGU +++ MELU +++ 30 +++ KAPF +++ ${event.dateLabel.toUpperCase()} +++ BITTE NICHT VERGESSEN +++`;
   }
   $('#title').textContent = event.title;
   splitTitle();
