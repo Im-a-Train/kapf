@@ -33,7 +33,7 @@ export const event = {
     },
     brunch: {
       path: '/brunch',
-      subtitle: 'Brunch mit Familie und Freunden. Kinder ausdrücklich erwünscht.',
+      subtitle: 'Brunch mit Familie und Freunden. Kinder willkommen.',
       intro: 'Am Samstagmorgen laden wir unsere Familien und Freunde zum Brunch im Kapf ein: Zopf, Kaffee, Rührei, so viel es braucht. Danach lassen wir den Nachmittag gemütlich zusammen ausklingen. Kommt, wann es euch passt, und bleibt, solange ihr mögt: Wer Lust hat, ist auch zum Znacht und am Fest in der Nacht herzlich willkommen. Kreuzt bei der Anmeldung einfach alles an, wo ihr dabei seid.',
       time: 'Brunch und Nachmittag, wer mag bis in die Nacht',
       plan: ['vormittag', 'nachmittag'],
