@@ -45,13 +45,15 @@ function renderPlan() {
   $('#plan-list').replaceChildren(...event.plan.map((p, i) => {
     // Klick zeigt diese Tageszeit im Wimmelbild (party-scene.js)
     const li = document.createElement('li');
-    li.className = `plan-item tilt-${i % 2 ? 'r' : 'l'}`;
+    li.className = `plan-item tilt-${i % 2 ? 'r' : 'l'}${p.extra ? ' plan-extra' : ''}`;
     li.innerHTML = '<button type="button" class="plan-btn" aria-pressed="false"><span class="plan-emoji"></span><span class="plan-when"></span><strong class="plan-what"></strong><span class="plan-look">👀 im Bild aaluege</span></button>';
     const btn = li.querySelector('button');
     btn.dataset.phase = p.id;
     li.querySelector('.plan-emoji').textContent = p.emoji;
     li.querySelector('.plan-when').textContent = p.when;
     li.querySelector('.plan-what').textContent = p.what;
+    // «wer mag»: zusätzlich wählbar (z. B. Abend und Nacht auf der Brunch-Seite)
+    if (p.extra) li.querySelector('.plan-when').textContent += ' · wer mag';
     btn.addEventListener('click', () => dispatchEvent(new CustomEvent('kapf:phase', { detail: p.id })));
     return li;
   }));
@@ -62,7 +64,7 @@ function renderPlan() {
     box.type = 'checkbox';
     box.name = 'parts';
     box.value = p.id;
-    label.append(box, ` ${p.emoji} ${p.when}: ${p.what}`);
+    label.append(box, ` ${p.emoji} ${p.when}: ${p.what}${p.extra ? ' (wer mag)' : ''}`);
     return label;
   }));
 }

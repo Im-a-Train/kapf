@@ -175,7 +175,8 @@ test('Zwei Einladungen: /brunch für Familien, / für das Fest', async () => {
 
   const { data: brunch } = await call('/api/event?path=/brunch');
   assert.equal(brunch.invite, 'brunch');
-  assert.deepEqual(brunch.plan.map((p) => p.id), ['vormittag', 'nachmittag']);
+  assert.deepEqual(brunch.plan.map((p) => p.id), ['vormittag', 'nachmittag', 'abend', 'nacht']);
+  assert.deepEqual(brunch.plan.filter((p) => p.extra).map((p) => p.id), ['abend', 'nacht'], 'Abend und Nacht: wer mag');
   const { data: fest } = await call('/api/event?path=/');
   assert.equal(fest.invite, 'fest');
   assert.deepEqual(fest.plan.map((p) => p.id), ['nachmittag', 'abend', 'nacht']);
@@ -185,17 +186,17 @@ test('Zwei Einladungen: /brunch für Familien, / für das Fest', async () => {
   assert.match(ics, /DTSTART;TZID=Europe\/Zurich:20270522T103000/);
 
   const { data: { token } } = await call('/api/riddle/solve', { method: 'POST', body: { id: 'alter', answer: '120' } });
-  // Über den Brunch-Link: Nacht gibt es nicht, dafür grössere Familien
+  // Über den Brunch-Link: grössere Familien, Brunch und wer mag auch Abend/Nacht
   const grosi = await call('/api/registrations', {
     method: 'POST',
-    body: { riddleToken: token, invite: 'brunch', name: 'Grosi', attending: 'yes', companions: 7, parts: ['vormittag', 'nacht'] },
+    body: { riddleToken: token, invite: 'brunch', name: 'Grosi', attending: 'yes', companions: 7, parts: ['vormittag', 'quatsch'] },
   });
   assert.equal(grosi.status, 201);
-  const onlyNight = await call('/api/registrations', {
+  const onkel = await call('/api/registrations', {
     method: 'POST',
-    body: { riddleToken: token, invite: 'brunch', name: 'Nachteule', attending: 'yes', parts: ['nacht'] },
+    body: { riddleToken: token, invite: 'brunch', name: 'Onkel', attending: 'yes', parts: ['vormittag', 'abend', 'nacht'] },
   });
-  assert.equal(onlyNight.status, 400);
+  assert.equal(onkel.status, 201);
   // Über den Fest-Link: kein Brunch
   const kollege = await call('/api/registrations', {
     method: 'POST',
@@ -210,6 +211,7 @@ test('Zwei Einladungen: /brunch für Familien, / für das Fest', async () => {
   const k = list.find((r) => r.name === 'Kollege');
   assert.equal(g.invite, 'brunch');
   assert.deepEqual(g.parts, ['vormittag']);
+  assert.deepEqual(list.find((r) => r.name === 'Onkel').parts, ['vormittag', 'abend', 'nacht']);
   assert.equal(k.invite, 'fest');
   assert.deepEqual(k.parts, ['abend']);
 
