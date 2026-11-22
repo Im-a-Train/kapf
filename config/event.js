@@ -23,6 +23,7 @@ export const event = {
   ],
   // Zwei Einladungen mit eigener URL. Den Familien schickt ihr /brunch, den Freunden /.
   // Alles hier überschreibt die Werte oben, `plan` wählt die Plan-Punkte (ids) dieser Einladung.
+  // `extra`: Plan-Punkte, die zusätzlich wählbar sind und als «wer mag» angezeigt werden.
   // Zeiten sind noch nicht definitiv.
   invites: {
     fest: {
@@ -33,9 +34,10 @@ export const event = {
     brunch: {
       path: '/brunch',
       subtitle: 'Brunch mit Familie und Freunden. Kinder ausdrücklich erwünscht.',
-      intro: 'Am Samstagmorgen laden wir unsere Familien und Freunde zum Brunch im Kapf ein: Zopf, Kaffee, Rührei, so viel es braucht. Danach lassen wir den Nachmittag gemütlich zusammen ausklingen. Kommt, wann es euch passt, und bleibt, solange ihr mögt.',
-      time: 'Brunch und Nachmittag', // TODO: genaue Zeiten festlegen
+      intro: 'Am Samstagmorgen laden wir unsere Familien und Freunde zum Brunch im Kapf ein: Zopf, Kaffee, Rührei, so viel es braucht. Danach lassen wir den Nachmittag gemütlich zusammen ausklingen. Kommt, wann es euch passt, und bleibt, solange ihr mögt: Wer Lust hat, ist auch zum Znacht und am Fest in der Nacht herzlich willkommen. Kreuzt bei der Anmeldung einfach alles an, wo ihr dabei seid.',
+      time: 'Brunch und Nachmittag, wer mag bis in die Nacht',
       plan: ['vormittag', 'nachmittag'],
+      extra: ['abend', 'nacht'],
       arriveBy: '10:30', // TODO
       maxCompanions: 8, // Familien sind grösser
       calendar: { start: '2027-05-22T10:30', end: '2027-05-22T17:00' }, // TODO

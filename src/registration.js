@@ -10,12 +10,15 @@ export function resolveInvite(name, { invites = {} } = {}) {
 // der Plan enthält nur ihre Punkte.
 export function eventForInvite(event, name) {
   const invite = resolveInvite(name, event);
-  const { path, plan: ids, calendar, ...overrides } = event.invites?.[invite] ?? {};
+  const { path, plan: ids, extra = [], calendar, ...overrides } = event.invites?.[invite] ?? {};
   return {
     ...event,
     ...overrides,
     invite,
-    plan: ids ? (event.plan ?? []).filter((p) => ids.includes(p.id)) : event.plan,
+    plan: ids
+      ? (event.plan ?? []).filter((p) => ids.includes(p.id) || extra.includes(p.id))
+        .map((p) => (extra.includes(p.id) ? { ...p, extra: true } : p))
+      : event.plan,
     calendar: { ...event.calendar, ...calendar },
   };
 }
